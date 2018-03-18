@@ -1,0 +1,1090 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Text;
+using System.Drawing;
+using System.Threading.Tasks;
+using Autodesk.AutoCAD;
+using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using System.IO;
+
+using Autodesk.AutoCAD.Interop;
+using System.Runtime.InteropServices;
+
+
+/*** Referenced DLLs for AutoCad .NET              ***/
+/*****************************************************/
+// C:\Program Files\Autodesk\AutoCAD 2013\accoremgd.dll
+// C:\Program Files\Autodesk\AutoCAD 2013\acdbmgd.dll
+
+/*** Referenced DLLs for AutoCad .NET COM Interop  ***/
+/*****************************************************/
+// C:\Program Files\Autodesk\AutoCAD 2013\Autodesk.AutoCAD.Interop.dll
+// C:\Program Files\Autodesk\AutoCAD 2013\Autodesk.AutoCAD.Interop.Common.dll
+
+/*** Do not reference                              ***/
+/*****************************************************/
+// Don't add this reference
+// C:\Program Files\Common Files\Autodesk Shared\acax19enu.tlb
+//[assembly: CommandClass(typeof(AutoCADNET.Class1))]
+
+
+// COM Interop is needed to send commands to AutoCad asynchronously, using the SendCommand function.
+// Single commands can be sent to run in AutoCad asynchronously using the SendStringToExecute function.
+
+namespace AutoCADNET
+{
+    public class Class1
+    {
+
+        // Globals
+        public static class Globals
+        {
+            public static System.Boolean makeChanges = true;
+
+            public static System.Int64 pubvar = 0;
+            public static System.String pubstring = "pubstring";
+            public static System.Boolean pubbool = false;
+        }
+
+
+        /*****************/
+        /* Test commands */
+        /*****************/
+
+        /// <summary>
+        /// Test function for Interop functionality
+        /// </summary>
+        /// <remarks> Interop function </remarks>
+        [CommandMethod("COMTEST")]
+        public void COMTEST()
+        {
+
+            Autodesk.AutoCAD.Interop.AcadApplication acApp = null;
+
+            try
+            {
+                // acax19enu.tlb -- C:\Program Files\Common Files\Autodesk Shared\acax19enu.tlb
+                acApp = (AcadApplication)Marshal.GetActiveObject("AutoCAD.Application.19");
+
+                // CreateObject("AutoCAD.Application.18") allows you
+                // to create an instance of AutoCAD and get an object that
+                // represents the new instance of the application. 
+            }
+            catch
+            {
+
+            }
+
+            if (acApp != null)
+            {
+
+                acApp.Visible = true;
+
+                acApp.ActiveDocument.SendCommand("Greeting" + "\n");
+
+            }
+
+        }
+
+        /// <summary>
+        /// Writes message to dwg for testing purposes
+        /// </summary>
+        [CommandMethod("NETTEST")]
+        public void NETTEST()
+        {
+            // Get the current document
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            //Get the database of the active document
+            Database acCurDb = acDoc.Database;
+
+            // Starts a new transaction with the Transaction Manager
+            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // Open the Block table record for read
+                BlockTable acBlkTbl;
+                acBlkTbl = acTrans.GetObject(acCurDb.BlockTableId,
+                                             OpenMode.ForRead) as BlockTable;
+
+                // Open the Block table record Model space for write
+                BlockTableRecord acBlkTblRec;
+                acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace],
+                                                OpenMode.ForWrite) as BlockTableRecord;
+
+                /* Creates a new MText object and assigns it a location, text value and text style */
+                MText objText = new MText();
+                objText.TextHeight = 1;
+
+                // Set the default properties for the MText object
+                objText.SetDatabaseDefaults();
+
+                // Specify the insertion point of the MText object
+                objText.Location = new Autodesk.AutoCAD.Geometry.Point3d(2, 2, 0);
+
+                // Set the text string for the MText object
+                objText.Contents = " .NET AutoCAD Test ";
+
+                // Set the text style for the MText object
+                objText.TextStyleId = acCurDb.Textstyle;
+
+                // Appends the new MText object to model space
+                acBlkTblRec.AppendEntity(objText);
+
+                // Appends to new MText object to the active transaction
+                acTrans.AddNewlyCreatedDBObject(objText, true);
+
+                // Saves the changes to the database and closes the transaction
+                acTrans.Commit();
+            }
+        }
+
+        /****************/
+        /* New commands */
+        /****************/
+
+        #region new cmds
+
+        /// <summary>
+        /// Display the names of all the layer table records
+        /// </summary>
+        [CommandMethod("ltrnet")]
+        public void ltrnet()
+        {
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+
+            // Get the current document and database, and start a transaction
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            Database acCurDb = acDoc.Database;
+
+            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // This example returns the layer table for the current database
+                LayerTable acLyrTbl;
+                acLyrTbl = acTrans.GetObject(acCurDb.LayerTableId,
+                                             OpenMode.ForRead) as LayerTable;
+
+                // Step through the Layer table and print each layer name
+                foreach (ObjectId acObjId in acLyrTbl)
+                {
+                    LayerTableRecord acLyrTblRec;
+                    acLyrTblRec = acTrans.GetObject(acObjId,
+                                                    OpenMode.ForRead) as LayerTableRecord;
+
+                    acDoc.Editor.WriteMessage("\n" + acLyrTblRec.Name);
+                }
+
+                // Dispose of the transaction
+            }
+
+        }
+
+        #endregion
+
+        /***********************/
+        /* Converted commands */
+        /***********************/
+
+        #region converted AutoCAD cmds
+
+        /// <summary>
+        /// Creates new red layer
+        /// old cmd: nr
+        /// </summary>
+        [CommandMethod("nrnet")]
+        public static void nrnet()
+        {
+            // Get the current doc
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            // Use the current doc to get the current database
+            Autodesk.AutoCAD.DatabaseServices.Database acCurDb = acDoc.Database;
+
+            // Open a database transaction
+            using (Autodesk.AutoCAD.DatabaseServices.Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                //Use the current database to get the layer table
+                LayerTable acLayerTable = acTrans.GetObject(acCurDb.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                // Make sure new layer name isn't already used
+                if (acLayerTable.Has("red") != true)
+                {
+
+                    // Open the Layer Table for write
+                    acLayerTable.UpgradeOpen();
+
+                    // Create a new layer table record and name it layer "newLayer"
+                    LayerTableRecord acLyrTblRec = new LayerTableRecord();
+                    acLyrTblRec.Name = "red";
+
+                    //Make layer red
+                    acLyrTblRec.Color = Autodesk.AutoCAD.Colors.Color.FromColor(System.Drawing.Color.Red);
+
+                    //public static Color FromColor(System.Drawing.Color value);
+
+                    // Add the new layer table record to the layer table and the transaction
+                    acLayerTable.Add(acLyrTblRec);
+                    acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
+
+                    // Commit the changes
+                    acTrans.Commit();
+
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Creates new green layer
+        /// old cmd: ng
+        /// </summary>
+        [CommandMethod("ngnet")]
+        public static void ngnet()
+        {
+            // Get the current doc
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            // Use the current doc to get the current database
+            Autodesk.AutoCAD.DatabaseServices.Database acCurDb = acDoc.Database;
+
+            // Open a database transaction
+            using (Autodesk.AutoCAD.DatabaseServices.Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                //Use the current database to get the layer table
+                LayerTable acLayerTable = acTrans.GetObject(acCurDb.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                // Make sure new layer name isn't already used
+                if (acLayerTable.Has("green") != true)
+                {
+
+                    // Open the Layer Table for write
+                    acLayerTable.UpgradeOpen();
+
+                    // Create a new layer table record and name it layer "newLayer"
+                    LayerTableRecord acLyrTblRec = new LayerTableRecord();
+                    acLyrTblRec.Name = "green";
+
+                    //Make layer red
+                    acLyrTblRec.Color = Autodesk.AutoCAD.Colors.Color.FromColor(System.Drawing.Color.Green);
+
+                    //public static Color FromColor(System.Drawing.Color value);
+
+                    // Add the new layer table record to the layer table and the transaction
+                    acLayerTable.Add(acLyrTblRec);
+                    acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
+
+                    // Commit the changes
+                    acTrans.Commit();
+
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Creates new blue layer
+        /// old cmd: nb
+        /// </summary>
+        [CommandMethod("nbnet")]
+        public static void nbnet()
+        {
+            // Get the current doc
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            // Use the current doc to get the current database
+            Autodesk.AutoCAD.DatabaseServices.Database acCurDb = acDoc.Database;
+
+            // Open a database transaction
+            using (Autodesk.AutoCAD.DatabaseServices.Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                //Use the current database to get the layer table
+                LayerTable acLayerTable = acTrans.GetObject(acCurDb.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                // Make sure new layer name isn't already used
+                if (acLayerTable.Has("blue") != true)
+                {
+
+                    // Open the Layer Table for write
+                    acLayerTable.UpgradeOpen();
+
+                    // Create a new layer table record and name it layer "newLayer"
+                    LayerTableRecord acLyrTblRec = new LayerTableRecord();
+                    acLyrTblRec.Name = "blue";
+
+                    //Make layer red
+                    acLyrTblRec.Color = Autodesk.AutoCAD.Colors.Color.FromColor(System.Drawing.Color.Blue);
+
+                    //public static Color FromColor(System.Drawing.Color value);
+
+                    // Add the new layer table record to the layer table and the transaction
+                    acLayerTable.Add(acLyrTblRec);
+                    acTrans.AddNewlyCreatedDBObject(acLyrTblRec, true);
+
+                    // Commit the changes
+                    acTrans.Commit();
+
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// zoom all
+        /// old cmd: za
+        /// </summary>
+        [CommandMethod("zanet")]
+        public static void zanet()
+        {
+
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            acDoc.SendStringToExecute("zoom all", true, false, false);
+
+
+        }
+
+        /// <summary>
+        /// purge all
+        /// old cmd: pall
+        /// </summary>
+        [CommandMethod("pallnet")]
+        public static void pallnet()
+        {
+
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            acDoc.SendStringToExecute("-purge" + "\n" + "all" + "\n" + " " + "\n" + "N" + "\n", true, false, false);
+
+        }
+
+        /// <summary>
+        /// old:pdf
+        /// </summary>
+        [CommandMethod("pdfnet")]
+        public static void pdfnet()
+        {
+            // Get the current doc
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            // Use the current doc to get the current database
+            //Autodesk.AutoCAD.DatabaseServices.Database acCurDb = acDoc.Database;
+
+            //HostApplicationServices hs = HostApplicationServices.Current;
+
+            //String pth = hs.FindFile(acDoc.Name, acDoc.Database, FindFileHint.Default);
+            //String name = "";
+
+            //FileInfo dwgFileInfo = new FileInfo(pth);
+
+            //if (dwgFileInfo.Exists)
+            //{
+            // name = Path.GetFileNameWithoutExtension(dwgFileInfo.Name);
+            //}
+
+            Autodesk.AutoCAD.Interop.AcadApplication acApp = null;
+
+            try
+            {
+                acApp = (AcadApplication)Marshal.GetActiveObject("AutoCAD.Application.19");
+            }
+            catch
+            {
+                //Could not find running AutoCad application instance
+                acDoc.SendStringToExecute("(prompt \"Could not find running AutoCad application instance\")(princ)" + "\n", true, false, false);
+            }
+
+            if (acApp != null)
+            {
+
+                acApp.Visible = true;
+
+                acApp.ActiveDocument.SendCommand("limits" + "\n" + "0,0" + "\n" + "8.5,11" + "\n");
+                acApp.ActiveDocument.SendCommand("-layer" + "\n" + "color" + "\n" + "white" + "\n" + "*" + "\n" + "" + "\n");
+                acApp.ActiveDocument.SendCommand("-plot" + "\n" + "y" + "\n" + "model" + "\n" + "cutepdf writer" + "\n" + "letter" + "\n" + "inches" + "\n" +
+                                                 "portrait" + "\n" + "no" + "\n" + "limits" + "\n" + "1:1" + "\n" + "c" + "\n" + "yes" + "\n" + "." + "\n" +
+                                                 "yes" + "\n" + "A" + "\n" + "n" + "\n" + "n" + "\n" + "y" + "\n");
+
+            }
+
+        }
+
+        /// <summary>
+        /// </summary>
+        [CommandMethod("DELLAYERnet")]
+        public static void DELLAYERnet()
+        {
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+
+            //   (setvar "cmdecho" 0)
+            Application.SetSystemVariable("cmdecho", 0);
+            Application.SetSystemVariable("highlight", 0);
+
+            // Get input from user
+            PromptResult input = ed.GetString(Environment.NewLine + "Enter input: ");
+            String inputLayer = input.StringResult.ToUpper();
+            ed.WriteMessage(Environment.NewLine + inputLayer);
+
+            //...
+            /*
+             ;DELLAYER: delete all entities on specified layer
+;-----------------------------------------------------------------------------
+(defun C:DELLAYER ( / l s)
+   (setvar "cmdecho" 0)
+   (setvar "highlight" 0)
+   (setq L (strcase (getstring "\nLayer to delete? ")))
+   (setq S (ssget "X" (list (cons 8 L))))  
+   (command "ERASE" S "")            
+   (setq S nil)
+   (setvar "cmdecho" 1)
+)
+
+
+             */
+
+        }
+
+        #endregion
+
+        #region internal functions
+
+        /// <summary>
+        /// list layers
+        /// old:laylist
+        /// Internal
+        /// </summary>
+        [CommandMethod("laylistnet")]
+        public static void laylistnet()
+        {
+            FileInfo outFileInfo = new FileInfo("C:\\psms\\test\\layerlist.txt");
+
+            DirectoryInfo outDirectoryInfo = new DirectoryInfo(outFileInfo.DirectoryName);
+
+            if (!outDirectoryInfo.Exists)
+            {
+                Directory.CreateDirectory(outDirectoryInfo.ToString());
+            }
+
+            // Get the current doc
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            // Use the current doc to get the current database
+            Autodesk.AutoCAD.DatabaseServices.Database acCurDb = acDoc.Database;
+
+            using (System.IO.StreamWriter writer = new System.IO.StreamWriter(outFileInfo.ToString(), true, Encoding.ASCII))
+            {
+                writer.Write(Environment.NewLine + acDoc.Name + Environment.NewLine);
+
+                using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+                {
+                    // This example returns the layer table for the current database
+                    LayerTable acLyrTbl;
+                    acLyrTbl = acTrans.GetObject(acCurDb.LayerTableId,
+                                                 OpenMode.ForRead) as LayerTable;
+
+                    // Step through the Layer table 
+                    foreach (ObjectId acObjId in acLyrTbl)
+                    {
+                        LayerTableRecord acLyrTblRec;
+                        acLyrTblRec = acTrans.GetObject(acObjId, OpenMode.ForRead) as LayerTableRecord;
+
+                        writer.Write(acLyrTblRec.Name + Environment.NewLine);
+                    }
+
+                }
+
+            }
+
+            acDoc.Editor.WriteMessage(Environment.NewLine + outFileInfo.ToString() + " written to" + Environment.NewLine);
+
+        }
+
+        /// <summary>
+        /// old: thaweps
+        /// </summary>
+        /// <remarks> Interop function </remarks>
+        [CommandMethod("thawepsnet")]
+        public static void thawepsnet()
+        {
+
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            FileInfo file = new FileInfo(acDoc.Name);
+
+            String justName = file.Name;
+            String noext = Path.GetFileNameWithoutExtension(justName);
+            String saveeps = "C:\\psms\\rpstlconv\\eps";
+            String outPath = String.Concat(saveeps, "\\", noext, ".eps");
+
+            Autodesk.AutoCAD.Interop.AcadApplication acApp = null;
+
+            try
+            {
+                acApp = (AcadApplication)Marshal.GetActiveObject("AutoCAD.Application.19");
+            }
+            catch
+            {
+                //Could not find running AutoCad application instance
+                acDoc.SendStringToExecute("(prompt \"Could not find running AutoCad application instance\")(princ)" + "\n", true, false, false);
+            }
+
+            if (acApp != null)
+            {
+
+                acApp.Visible = true;
+                acApp.ActiveDocument.SendCommand(
+                    "PLOT" + "\n" +
+                    "Y" + "\n" +
+                    "" + "\n" +
+                    "PSL1(AP).pc3" + "\n" +
+                    "ANSI A (8.50 x 11.00 Inches)" + "\n" +
+                    "I" + "\n" +
+                    "Portrait" + "\n" +
+                    "N" + "\n" +
+                    "Extents" + "\n" +
+                    "1:1" + "\n" +
+                    "C" + "\n" +
+                    "Y" + "\n" +
+                    "RPSTL.ctb" + "\n" +
+                    "Y" + "\n" +
+                    "N" + "\n" +
+                    "Y" + "\n" +
+                    outPath + "\n" +
+                    "N" + "\n" +
+                    "Y" + "\n"
+                );
+
+            }
+
+        }
+
+        /// <summary>
+        /// old:exbase
+        /// explodes base art
+        /// Doesn't work
+        /// </summary>
+        [CommandMethod("exbasenet")]
+        public static void exbasenet()
+        {
+            Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+            Autodesk.AutoCAD.Interop.AcadApplication acApp = null;
+
+            FileInfo dwgFileInfo = new FileInfo(acDoc.Name);
+            String dwgDirectory = dwgFileInfo.DirectoryName;
+            string savePath = String.Concat(dwgDirectory, "\\", dwgFileInfo.Name);
+
+            // TODO: use sendcommand instead
+            //acDoc.SendStringToExecute( "(princ " + "\"" + savePath + "\"" + ")" + "\n", true, false, false);
+
+            try
+            {
+                acApp = (AcadApplication)Marshal.GetActiveObject("AutoCAD.Application.19");
+            }
+            catch
+            {
+                //Could not find running AutoCad application instance
+                acDoc.SendStringToExecute("(prompt \"Could not find running AutoCad application instance\")(princ)" + "\n", true, false, false);
+            }
+
+            if (acApp != null)
+            {
+
+                acApp.Visible = true;
+
+                acApp.ActiveDocument.SendCommand("(princ " + "\"" + savePath + "\"" + ")" + "\n");
+                acApp.ActiveDocument.SendCommand("-layer" + "\n" + "freeze" + "\n" + "COUT" + "" + "\n");
+                acApp.ActiveDocument.SendCommand("explode" + "\n" + "all" + "\n" + "" + "\n");
+                acApp.ActiveDocument.SendCommand("-layer" + "\n" + "thaw" + "\n" + "COUT" + "\n" + "" + "\n");
+
+                acApp.ActiveDocument.SendCommand("qsave" + "\n");
+
+            }
+
+        }
+
+        /// <summary>
+        /// old: dwgsourcef and dwgsourcef
+        /// merged two files
+        /// </summary>
+        /// <remarks> Interop function </remarks>
+        //[CommandMethod("dwgsourcenet")]
+        //public static void dwgsourcenet()
+        //{
+
+        //    Autodesk.AutoCAD.ApplicationServices.Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+        //    String DwgName = acDoc.Name;
+        //    FileInfo file = new FileInfo(acDoc.Name);
+        //    DirectoryInfo dirInfo = new DirectoryInfo(file.DirectoryName);
+        //    String filename = file.Name;
+        //    String kFolder = String.Concat(filename.Substring(0, 4), "k" ) ;
+        //    Autodesk.AutoCAD.Interop.AcadApplication acApp = null;
+
+        //    if (DwgName.StartsWith("Z", true, System.Globalization.CultureInfo.CurrentCulture))
+        //    {
+        //        kFolder = "z";
+        //    }
+
+        //    String newsave = String.Concat("I:\\cfg3s_cfgbw_SourceDelivery\\dwg_files_processed\\", kFolder, "\\", filename);
+
+
+        //    //acDoc.SendStringToExecute(file.Name, true, false, false);
+        //    //return;
+
+        //    try
+        //    {
+        //        acApp = (AcadApplication)Marshal.GetActiveObject("AutoCAD.Application.19");
+        //    }
+        //    catch
+        //    {
+        //        //Could not find running AutoCad application instance
+        //        acDoc.SendStringToExecute("(prompt \"Could not find running AutoCad application instance\")(princ)" + "\n", true, false, false);
+        //    }
+
+        //    if (filename.Contains("F5") || filename.Contains("F6") || filename.Contains("f5") || filename.Contains("f6") )//f5 or f6
+        //    {
+
+        //        if (acApp != null)
+        //        {
+
+        //            acApp.Visible = true;
+        //            //acApp.ActiveDocument.SendCommand(newsave);
+        //            acApp.ActiveDocument.SendCommand("zoom" + "\n" + "all" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-layer" + "\n" +
+        //                                             "thaw" + "\n" +
+        //                                             "0" + "\n" +
+        //                                             "lock" + "\n" +
+        //                                             "0" + "\n" +
+        //                                             "set" + "\n" +
+        //                                             "0" + "\n" +
+        //                                             "" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-layer" + "\n" + "freeze" + "\n" + "*" + "\n" + "" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-layer" + "\n" +
+        //                                             "thaw" + "\n" +
+        //                                             "Ref_*" + "\n" +
+        //                                             "thaw" + "\n" +
+        //                                             "IADS_HOTSPOTS" + "\n" +
+        //                                             "thaw" + "\n" +
+        //                                             "ZONE" + "\n" +
+        //                                             "thaw" + "\n" +
+        //                                             "ST_AUTOCONVERT_MARKERS" + "\n" + "" + "\n");
+        //            acApp.ActiveDocument.SendCommand("erase" + "\n" +
+        //                                             "all" + "\n" +
+        //                                             "" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-purge" + "\n" + "all" + "\n" + "" + "\n" + "n" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-layer" + "\n" + "unlock" + "\n" + "*" + "\n" + "thaw" + "\n" + "*" + "\n" + "" + "\n");
+        //            acApp.ActiveDocument.SendCommand("-layer" + "\n" + "color" + "\n" + "white" + "\n" + "*" + "\n" + "" + "\n");
+
+        //            laylistnet();
+
+        //            acApp.ActiveDocument.SendCommand("regen" + "\n");
+        //            acApp.ActiveDocument.SendCommand("SAVEAS" + "\n" + newsave + "\n");
+
+        //            Object cmdactive = Application.GetSystemVariable("CMDACTIVE");
+
+        //            int parsedInt = 0;
+
+        //            if (int.TryParse(cmdactive.ToString(), out parsedInt))
+        //            {
+        //                acApp.ActiveDocument.SendCommand("(princ " + "\"" + parsedInt + "\"" + ")" + "\n");
+        //            }
+        //            else
+        //            {
+        //                acApp.ActiveDocument.SendCommand("bad" + "\n");
+        //            }
+        //            //acApp.ActiveDocument.SendCommand(cmdactive.ToString());
+        //            //System.Int32 cmdactiveI = (System.Int32)cmdactive;
+
+        //            if (parsedInt > 0)
+        //            {
+        //                acApp.ActiveDocument.SendCommand("_Y" + "\n");
+        //            }
+
+        //        }
+        //        else
+        //        {
+        //            //Could not find running AutoCad application instance
+        //            acDoc.SendStringToExecute("(prompt \"Could not find running AutoCad application instance\")(princ)" + "\n", true, false, false);
+        //        }
+        //    }
+
+
+        //    else
+        //    {
+        //        //not f5 or f6
+
+        //        System.Int32 reclay = 0;
+
+        //        acApp.ActiveDocument.SendCommand("zoom" + "\n" + "all" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-layer" + "\n" +
+        //                                         "thaw" + "\n" +
+        //                                         "*" + "\n" +
+        //                                         "set" + "\n" +
+        //                                         "0" + "\n" +
+        //                                         "" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-purge" + "\n" + "all" + "\n" + "" + "\n" + "n" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-layer" + "\n" + "freeze" + "\n" + "template" + "\n" + "" + "\n");
+
+        //        acApp.ActiveDocument.SendCommand("-layer" + "\n" + "lock" + "\n" + "0" + "\n" + 
+        //                                         "lock" + "\n" + "column" + "\n" +
+        //                                         "lock" + "\n" + "filename" + "\n" + 
+        //                                         "lock" + "\n" + "BLOCKS" + "\n" +
+        //                                         "lock" + "\n" + "filename" + "\n" +
+        //                                         "lock" + "\n" + "ST_TABLE_VISIBLE" + "\n" +
+        //                                         "lock" + "\n" + "ST_TABLE_INVISIBLE" + "\n" +
+        //                                         "freeze" + "\n" + "ST_TABLE_INVISIBLE" + "\n" + "" + "\n");
+        //        laylistnet();
+
+        //        acApp.ActiveDocument.SendCommand("erase" + "\n" + "all" + "\n" + "" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-purge" + "\n" + "all" + "\n" + "" + "\n" + "n" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-layer" + "\n" + "unlock" + "\n" + "*" + "\n" + "" + "\n");
+        //        acApp.ActiveDocument.SendCommand("-layer" + "\n" + "color" + "\n" + "white" + "\n" + "*" + "\n" + "" + "\n");
+
+        //        acApp.ActiveDocument.SendCommand("regen" + "\n");
+        //        acApp.ActiveDocument.SendCommand("_.saveas" + "\n" + newsave + "\n");
+
+        //        Object cmdactive = Application.GetSystemVariable("CMDACTIVE");
+
+        //        int parsedInt = 0;
+
+        //        if (int.TryParse(cmdactive.ToString(), out parsedInt))
+        //        {
+        //            acApp.ActiveDocument.SendCommand("(princ " + "\"" + parsedInt + "\"" + ")" + "\n");
+        //        }
+        //        else
+        //        {
+        //            acApp.ActiveDocument.SendCommand("bad" + "\n");
+        //        }
+        //        //acApp.ActiveDocument.SendCommand(cmdactive.ToString());
+        //        //System.Int32 cmdactiveI = (System.Int32)cmdactive;
+
+        //        if (parsedInt > 0)
+        //        {
+        //            acApp.ActiveDocument.SendCommand("_Y" + "\n");
+        //        }
+
+        //    }
+        //}
+
+        /// <summary>
+        /// ??? -- incomplete
+        /// old cmd: caduser
+        /// </summary>
+        [CommandMethod("cadunet")]
+        public static void cadunet()
+        {
+
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+
+            String cdate = Application.GetSystemVariable("CDATE").ToString();
+
+            ed.WriteMessage(cdate);
+
+        }
+
+        /// <summary>
+        /// Helper function to call dwgsourcenet without making any changes to the file
+        /// </summary>
+        [CommandMethod("dwgsourcenetcheck")]
+        public static void dwgsourcenetcheck()
+        {
+            Globals.makeChanges = false;
+
+            dwgsourcenet();
+
+            // Reset global so dwgsourcenet function will make changes when called directly
+            Globals.makeChanges = true;
+        }
+
+        /// <summary>
+        /// Helper function to call dwgsourcenet without making any changes to the file
+        /// </summary>
+        [CommandMethod("dwgsourcenetdcheck", CommandFlags.Session)]
+        public static void dwgsourcenetdcheck()
+        {
+            Globals.makeChanges = false;
+
+            dwgsourcenetd();
+
+            // Reset global so dwgsourcenet function will make changes when called directly
+            Globals.makeChanges = true;
+        }
+
+
+        /// <summary>
+        /// go through every dwg in a directory and call dwgsourcenet on each one
+        /// </summary>
+        [CommandMethod("dwgsourcenetd", CommandFlags.Session)]
+        public static void dwgsourcenetd()
+        {
+
+            //Get the editor for message writing to console and get path from user
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+
+            PromptResult result = ed.GetString(Environment.NewLine + "Enter path: ");
+
+            // Validate path given by user
+            System.IO.DirectoryInfo dwgPath;
+            try
+            {
+                dwgPath = new System.IO.DirectoryInfo(result.StringResult.Trim());
+            }
+            catch
+            {
+                ed.WriteMessage(Environment.NewLine + "Invalid Path" + Environment.NewLine);
+                return;
+            }
+
+            if (!System.IO.Directory.Exists(dwgPath.FullName))
+            {
+                ed.WriteMessage(Environment.NewLine + "Invalid Path" + Environment.NewLine);
+                return;
+            }
+
+            System.String firstDWG = System.IO.Directory.GetFiles(dwgPath.FullName, "*.dwg").First();
+
+            //DocumentCollection dc = new DocumentCollection();
+            //DocumentCollection acDocMgr = Application.DocumentManager.Open();
+            //System.IO.DirectoryInfo dwgPath = new System.IO.DirectoryInfo(inputPath.StringResult);
+
+            //return;
+            /******dwg is busy error when called from dwgsourcenetdcheck ????******/
+
+            //Close document that was used to get input path from user
+            Application.DocumentManager.MdiActiveDocument.CloseAndDiscard();
+
+            /*******************************************************/
+
+            if (!firstDWG.EndsWith(".dwg", StringComparison.OrdinalIgnoreCase))
+            {
+                //directory doesnt have a DWG file, so return
+                ed.WriteMessage(Environment.NewLine + "Specified directory does not contain any .dwg files" + Environment.NewLine);
+                return;
+            }
+            else
+            {
+                System.IO.StreamWriter myWriter = null;
+
+                try { myWriter = new System.IO.StreamWriter(dwgPath.FullName + "\\" + "dwgsource_errors_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".txt"); }
+                catch
+                {
+                    ed.WriteMessage(Environment.NewLine + "Unable to write to this directory" + Environment.NewLine);
+                    return;
+                }
+
+                System.String[] allfiles = System.IO.Directory.GetFiles(dwgPath.FullName, "*.dwg");
+
+                foreach (String inFile in allfiles)
+                {
+                    FileInfo curfile = new FileInfo(inFile);
+
+                    if (inFile.EndsWith(".dwg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Application.DocumentManager.Open(curfile.FullName, false);
+                        Application.DocumentManager.MdiActiveDocument.LockDocument();
+
+                        String currentDwgErrors = dwgsourcenet();
+                        try { myWriter.Write(currentDwgErrors); }
+                        catch { }
+                        //Application.DocumentManager.MdiActiveDocument.CloseAndDiscard();
+
+                        Application.DocumentManager.MdiActiveDocument.CloseAndSave(inFile);
+
+                        //            Database acadDB = new Database();
+                        //            //Open Drawing File
+                        //            acadDB.ReadDwgFile(inFile, FileShare.ReadWrite, true, "");
+
+                        //            Transaction acadtrans = acadDB.TransactionManager.StartTransaction();
+                        //            try
+                        //            {
+                        //                // Place Code Here
+                        //                acadtrans.Commit();
+                        //            }
+                        //            catch (Autodesk.AutoCAD.Runtime.Exception)
+                        //            {
+                        //                acadtrans.Abort();
+                        //            }
+                        //            finally
+                        //            {
+                        //                acadtrans.Dispose();
+                        //                acadDB.Dispose();
+                        //           }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                    //            //Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.Open();
+                    //            //acDocMgr.Open(inFile, false);
+                    //            //Application.DocumentManager.MdiActiveDocument.CloseAndDiscard();
+                }
+                try
+                {
+                    myWriter.Flush();
+                    myWriter.Close();
+                }
+                catch
+                {
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [CommandMethod("dwgsourcenet")]
+        public static String dwgsourcenet()
+        {
+            Regex pattern1 = new Regex(@"^[ACDFIJKNTVWX][0-9][0-9][0-9][0-9][0-9][0-9][A-Z]?((-|–)[0-9][0-9]?)?$");
+            Regex pattern2 = new Regex(@"^[ABCDEGHKLNPRUTZ][0-9][0-9][0-9][0-9]?((-|–)[0-9][0-9]?)?$");
+            Regex pattern3 = new Regex(@"^[0-9][0-9][0-9][0-9][0-9][0-9][A-Z]?((-|–)([0-9]|[A-Z]))?$");
+
+            System.Int32 numErrors = 0;
+
+            StringBuilder sb = new StringBuilder();
+
+            // Get the current document
+            Document acDoc = Application.DocumentManager.MdiActiveDocument;
+
+            //Get the current database
+            Database acCurDb = acDoc.Database;
+
+            //Get the editor for message writing to console
+            Editor ed = Application.DocumentManager.MdiActiveDocument.Editor;
+
+            //Get name of file without the extension
+            String DwgName = acDoc.Name;
+            FileInfo file = new FileInfo(acDoc.Name);
+            String filename = Path.GetFileNameWithoutExtension(file.Name);
+
+            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            {
+                // Get the layer table for the current database
+                LayerTable acLyrTbl;
+                acLyrTbl = acTrans.GetObject(acCurDb.LayerTableId, OpenMode.ForWrite) as LayerTable;
+
+                // Step through the Layer table and visit every layer
+                foreach (ObjectId acObjId in acLyrTbl)
+                {
+                    //Get a layer from layer table
+                    LayerTableRecord acLyrTblRec;
+                    acLyrTblRec = acTrans.GetObject(acObjId, OpenMode.ForWrite) as LayerTableRecord;
+
+                    //Make layer name uppercase for regex and string comparisons
+                    String curLayerName = acLyrTblRec.Name.ToUpper();
+
+                    // Make layer white
+                    if (Globals.makeChanges)
+                    {
+                        acLyrTblRec.Color = Autodesk.AutoCAD.Colors.Color.FromColor(System.Drawing.Color.White);
+                    }
+
+                    if ((curLayerName == "0") ||
+                         (curLayerName == "COLUMN") ||
+                         (curLayerName == "FILENAME") ||
+                         (curLayerName == "MSNUM") ||
+                         (curLayerName == "SCALE") ||
+                         (curLayerName == "ST_TABLE_VISIBLE") ||
+                         (curLayerName == "ST_TABLE_INVISIBLE") ||
+                         (String.Equals(curLayerName, filename, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (Globals.makeChanges)
+                        {
+                            // Unlock
+                            acLyrTblRec.IsLocked = false;
+
+                            // Thaw
+                            if (acLyrTblRec.IsFrozen) { acLyrTblRec.IsFrozen = false; }
+
+                            if (curLayerName == "ST_TABLE_INVISIBLE")
+                            {
+                                // Turn off
+                                acLyrTblRec.IsOff = true;
+                            }
+                            else
+                            {
+                                // Turn on
+                                acLyrTblRec.IsOff = false;
+                            }
+
+                            ed.WriteMessage("\nSaving layer: " + curLayerName);
+                        }
+                        else
+                        {
+                            ed.WriteMessage(Environment.NewLine + "OK Layer: " + curLayerName);
+                        }
+                    }
+                    else
+                    {
+                        if ((curLayerName == "IADS_HOTSPOTS") || (curLayerName.StartsWith("REF_")) || (curLayerName == "ST_AUTOCONVERT_MARKERS") || (curLayerName == "ZONE")
+                             ||
+                             (((pattern1.IsMatch(curLayerName)) || (pattern2.IsMatch(curLayerName)) || (pattern3.IsMatch(curLayerName)))
+                               && !(filename.ToUpper().Equals(curLayerName))
+                             )
+                           )
+                        {
+                            if (Globals.makeChanges)
+                            {
+                                ed.WriteMessage(Environment.NewLine + "Deleting layer: " + curLayerName);
+
+                                try
+                                {
+                                    // Unlock
+                                    acLyrTblRec.IsLocked = false;
+
+                                    // Thaw
+                                    acLyrTblRec.IsFrozen = false;
+
+                                    // Turn off
+                                    acLyrTblRec.IsOff = true;
+
+                                    // Erase
+                                    acLyrTblRec.Erase(true);
+                                }
+                                catch (Autodesk.AutoCAD.Runtime.Exception Ex)
+                                {
+                                    ed.WriteMessage(Environment.NewLine + "Layer " + curLayerName + " could not be deleted because " + Ex.Message);
+                                }
+                            }
+                            else
+                            {
+                                ed.WriteMessage(Environment.NewLine + "Bad Layer: " + curLayerName);
+                            }
+                        }
+                        else
+                        {
+                            //Error layer
+
+                            sb.Append(String.Concat(acDoc.Name, " : ", acLyrTblRec.Name, Environment.NewLine));
+
+                            numErrors++;
+
+                            // Report layer error
+                            ed.WriteMessage(Environment.NewLine + acDoc.Name + ": ERROR: Invalid Layer " + curLayerName);
+                        }
+
+                    }
+                }
+
+                // Set layer 0 to active layer
+                try { if (Globals.makeChanges) { acCurDb.Clayer = acLyrTbl["0"]; } }
+                catch { }
+
+                finally
+                {
+                    // Save the changes and dispose of the transaction
+                    acTrans.Commit();
+                }
+            }
+
+            return sb.Append(((numErrors > 0) ? "------------" + Environment.NewLine : "")).ToString();
+            // Globals.MakeChanges = true;
+        }
+
+        #endregion
+
+    }
+}
