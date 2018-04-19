@@ -58,6 +58,7 @@ using System.IO;
 // Todo: 
     // Remove unnecessary property changed events for buttons                                                                                   
     // Make folder browser dialog default to path in bound vm variable
+    // Use async. file operations instead of sync.
 
 // Acdbmgd assembly calls into EntryPoint assembly which calls into AcadExts assembly
                                                                       
@@ -103,7 +104,7 @@ namespace EntryPoint
     {
         // This command opens WPF app from ACAD cmd line, must be public to expose cmd to AutoCAD
         [CommandMethod("AcadExtsMenu", CommandFlags.Session)]
-        public static void AcadExtsMenu()
+        public static void AcadExts()
         {
             if (System.Threading.Thread.CurrentThread.Name == null) { System.Threading.Thread.CurrentThread.Name = "EntryPointToVMThread"; }
 

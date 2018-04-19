@@ -28,7 +28,7 @@ namespace AcadExts
             InitializeComponent();
 
             // Because setting the context in the view isnt working because of VS bug
-            //base.DataContext = new Presenter();
+            base.DataContext = new Presenter();
         }
 
         // Added this code to code-behind because there is no other way to access

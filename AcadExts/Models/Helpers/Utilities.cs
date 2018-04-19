@@ -20,6 +20,7 @@ namespace AcadExts
         public static String n(int num)
         {
             String s = String.Empty;
+            if (num < 1) { return s; }
 
             try { s = String.Concat(Enumerable.Repeat<String>(Environment.NewLine, num)); }
             catch { }
@@ -44,9 +45,12 @@ namespace AcadExts
 
         public static double TextWidth(this DBText dbTextIn)
         {
-            if (dbTextIn.TextString.Length == 8) { return .4329; }
+            const double Length8Chars = .4329;
+            const double Length9Chars = .4757;
 
-            if (dbTextIn.TextString.Length == 9) { return .4757; }
+            if (dbTextIn.TextString.Length == 8) { return Length8Chars; }
+
+            if (dbTextIn.TextString.Length == 9) { return Length9Chars; }
 
             return -1;
 
@@ -166,29 +170,6 @@ namespace AcadExts
             }
         }
 
-        public static Boolean isFigCap(this BlockReference inBR)
-        {
-            return (inBR.Name.Trim().ToUpper().StartsWith("FCL1"));
-        }
-
-        public static Boolean isPageNum(this String inText)
-        {
-            inText = inText.ToUpper().Trim();
-            return (inText.StartsWith("IV") && inText.Contains("-"));
-        }
-
-        public static Boolean isPrefixNoteText(this String inText)
-        {
-            inText = inText.ToUpper().Trim();
-            return (inText.Contains("PREFIX ALL") || inText.Contains("DESIGNATIONS WITH"));
-        }
-
-        public static Boolean isTMNum(this String inText)
-        {
-            inText = inText.ToUpper().Trim();
-            return (inText.Contains("TM") && (inText.Contains("-")) && (inText.HasNums()));
-        }
-
         public static System.Boolean HasNums(this String inString)
         {
             if (String.IsNullOrWhiteSpace(inString)) { return false; }
@@ -196,11 +177,6 @@ namespace AcadExts
             String stringNums = new String(inString.ToCharArray().Where(c => char.IsDigit(c)).ToArray());
 
             return (!String.IsNullOrWhiteSpace(stringNums));
-        }
-
-        public static Boolean isPrefixNoteBR(this BlockReference inBR)
-        {
-            return (inBR.Name.Trim().ToUpper().Contains("PRENOTE"));
         }
 
         public static System.Boolean IsPositionInRect(this DBText refDes, double LLX, double LLY, double TRX, double TRY)
@@ -255,6 +231,11 @@ namespace AcadExts
         // Truncates double after given # of decimal places
         public static String truncstring(this double inDouble, int numPlaces = 3)
         {
+            if (numPlaces < 0)
+            {
+                throw new ArgumentOutOfRangeException("numPlaces", "Cannot truncate argument to less than 0 places");
+            }
+
             return inDouble.ToString(String.Concat("###.", String.Concat(Enumerable.Repeat<String>("0", numPlaces))));
 
             // https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-numeric-format-strings

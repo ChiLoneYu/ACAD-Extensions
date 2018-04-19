@@ -69,6 +69,7 @@ namespace AcadExts
 
                 if (_errorCount == 0)
                 {
+                    // Try to delete log file automatically if its empty
                     try { File.Delete(_path); } catch { }
                 }
             }

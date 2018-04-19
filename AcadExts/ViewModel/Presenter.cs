@@ -26,6 +26,7 @@ namespace AcadExts
         DelegateCommand _ExtractCommand = null;
         DelegateCommand _DebugDetailsCommand = null;
         DelegateCommand _ConverterTo2000Command = null;
+        DelegateCommand _DefaultRectangleCheckedCommand = null;
 
         private Boolean DebugInfoDisplayed = false;
 
@@ -36,12 +37,8 @@ namespace AcadExts
         // Initializes worker with new BackgroundWorker instance
         private BackgroundWorker GetWorker()
         {
-            // Add worker initialization steps here
-            //worker = new BackgroundWorker();
+            // Add any worker initialization steps here
             return new BackgroundWorker() { WorkerSupportsCancellation = true, WorkerReportsProgress = true };
-            //worker.WorkerSupportsCancellation = true;
-            //worker.WorkerReportsProgress = true;
-            //return worker;
         }
 
         // Get Dispatcher for this thread (main thread)
@@ -61,7 +58,6 @@ namespace AcadExts
             if (System.Threading.Thread.CurrentThread.Name == null) { System.Threading.Thread.CurrentThread.Name = "VM Thread"; }
 
             // In Info tab, show command descriptions based on custom class attributes and runtime assembly info using reflection
-            //CmdInfo = String.Concat("Commands: ", Utilities.nl, ProgramInfo.GetCmdInfo(), Utilities.nl, "Info: ", Utilities.nl, ProgramInfo.GetAssemblyInfo());
             CmdInfoList = ProgramInfo.GetCmdInfo().Concat(ProgramInfo.GetAssemblyInfo()).ToList<String>();
         }
 
@@ -84,174 +80,270 @@ namespace AcadExts
             return;
         }
 
-        // Single folder path used for all commands
-        private String _Path = "Folder Path";
-        public String Path { get { return _Path; } set { _Path = value; RaisePropertyChangedEvent("Path"); } }
-
-        public List<String> CmdInfoList { get { return _CmdInfoList; } set { _CmdInfoList = value; RaisePropertyChangedEvent("CmdInfoList"); } }
-        private List<String> _CmdInfoList;
-
         // Command bindings
 
         public ICommand FormatForDeliveryCommand
         {
-            get { return _FormatForDeliveryCommand ?? (_FormatForDeliveryCommand = new DelegateCommand(this.FormatForDelivery, (s) => canWork())); }
+            get { return _FormatForDeliveryCommand ??
+                         (_FormatForDeliveryCommand = new DelegateCommand(this.FormatForDelivery, (s) => canWork())); }
         }
 
         public ICommand DebugDetails
         {
-            get { return _DebugDetailsCommand ?? (_DebugDetailsCommand = new DelegateCommand(this.AddDebugInfo)); }
+            get { return _DebugDetailsCommand ??
+                         (_DebugDetailsCommand = new DelegateCommand(this.ToggleDebugInfo)); }
         }
 
         public ICommand GenerateKeyfileCommand
         {
-            get { return _GenerateKeyfileCommand ?? (_GenerateKeyfileCommand = new DelegateCommand(this.GenerateKeyfiles, (s) => canWork())); }
+            get { return _GenerateKeyfileCommand ??
+                         (_GenerateKeyfileCommand = new DelegateCommand(this.GenerateKeyfiles, (s) => canWork())); }
         }
 
         public ICommand UpdateFBDCommand
         {
-            get { return _UpdateFBDCommand ?? (_UpdateFBDCommand = new DelegateCommand(this.UpdateFBDs, (s) => canWork())); }
+            get { return _UpdateFBDCommand ??
+                         (_UpdateFBDCommand = new DelegateCommand(this.UpdateFBDs, (s) => canWork())); }
+        }
+
+        // Sets default figure rectangle coordinates for UpdateFBD command
+        public ICommand DefaultRectangleCheckedCommand
+        {
+            //get { return _DefaultRectangleCheckedCommand ?? (_DefaultRectangleCheckedCommand = new DelegateCommand(DefaultRectangleChecked)); }
+            get { return _DefaultRectangleCheckedCommand ?? 
+                         (_DefaultRectangleCheckedCommand = new DelegateCommand(() => { LeftOfX = DwgUpdater.LeftOfXDefault;
+                                                                                        BelowY = DwgUpdater.BelowYDefault;
+                                                                                        RightOfX = DwgUpdater.RightOfXDefault;
+                                                                                        AboveY = DwgUpdater.AboveYDefault;
+                                                                                       }));
+            }
         }
 
         public ICommand InsXRefCommand
         {
-            get { return _InsXRefCommand ?? (_InsXRefCommand = new DelegateCommand(this.InsXRef, (s) => canWork())); }
+            get { return _InsXRefCommand ??
+                         (_InsXRefCommand = new DelegateCommand(this.InsXRef, (s) => canWork())); }
         }
 
         public ICommand LayerListerCommand
         {
             //get { return _LayerListerCommand ?? (_LayerListerCommand = new DelegateCommand(this.ListLayers, delegate(object param) { if (worker == null) { return true; } return !worker.IsBusy; })); }
-            get { return _LayerListerCommand ?? (_LayerListerCommand = new DelegateCommand(this.ListLayers, (s) => canWork())); }
+            get { return _LayerListerCommand ??
+                         (_LayerListerCommand = new DelegateCommand(this.ListLayers, (s) => canWork())); }
         }
 
         public ICommand CheckLayersCommand
         {
-            get { return _CheckLayersCommand ?? (_CheckLayersCommand = new DelegateCommand(this.CheckLayers, (s) => canWork())); }
+            get { return _CheckLayersCommand ??
+                         (_CheckLayersCommand = new DelegateCommand(this.CheckLayers, (s) => canWork())); }
         }
 
         public ICommand ListObjectsCommand
         {
-            get { return _ListObjectsCommand ?? (_ListObjectsCommand = new DelegateCommand(this.ListObjects)); }
+            get { return _ListObjectsCommand ??
+                         (_ListObjectsCommand = new DelegateCommand(this.ListObjects));}
         }
 
         public ICommand ExtractCommand
         {
-            get { return _ExtractCommand ?? (_ExtractCommand = new DelegateCommand(this.ExtractFiles, (s) => canWork())); }
+            get { return _ExtractCommand ??
+                         (_ExtractCommand = new DelegateCommand(this.ExtractFiles, (s) => canWork())); }
         }
 
         public ICommand LowercaseLayersCommand
         {
-            get { return _LowercaseLayersCommand ?? (_LowercaseLayersCommand = new DelegateCommand(this.LowercaseLayers, (s) => canWork())); }
+            get { return _LowercaseLayersCommand ??
+                         (_LowercaseLayersCommand = new DelegateCommand(this.LowercaseLayers, (s) => canWork())); }
         }
 
         public ICommand ConverterTo2000Command
         {
-            get { return _ConverterTo2000Command ?? (_ConverterTo2000Command = new DelegateCommand(this.ConverterTo2000, (s) => canWork())); }
+            get { return _ConverterTo2000Command ??
+                         (_ConverterTo2000Command = new DelegateCommand(this.ConverterTo2000, (s) => canWork())); }
         }
 
         // Binded Props for methods
 
+        // Single folder path used for all dwg processing commands
+        private String _Path = "Folder Path";
+        public String Path
+        {
+            get { return _Path; }
+            set { _Path = value; RaisePropertyChangedEvent("Path"); }
+        }
+
         // 2000 Converter
         private Int32 _ValueTo2000;
-        public Int32 ValueTo2000 { get { return _ValueTo2000; } set { _ValueTo2000 = value; RaisePropertyChangedEvent("ValueTo2000"); } }
+        public Int32 ValueTo2000
+        {
+            get { return _ValueTo2000; }
+            set { _ValueTo2000 = value; RaisePropertyChangedEvent("ValueTo2000"); }
+        }
 
         // FBD Updater
         private Int32 _ValueFU;
-        public Int32 ValueFU {
+        public Int32 ValueFU
+        {
             get { return _ValueFU; }
             set { _ValueFU = value; RaisePropertyChangedEvent("ValueFU"); }
         }
 
+        private Boolean _FilesNotSpecified = false;
+        public Boolean FilesNotSpecified
+        {
+            get { return _FilesNotSpecified; }
+            set { _FilesNotSpecified = value; RaisePropertyChangedEvent("FilesNotSpecified"); }
+        }
+
         private String _PathFUxml;
-        public String PathFUxml { get { return _PathFUxml; } set { _PathFUxml = value; RaisePropertyChangedEvent("PathFUxml"); } }
+        public String PathFUxml {
+            get { return _PathFUxml; }
+            set { _PathFUxml = value; RaisePropertyChangedEvent("PathFUxml"); }
+        }
 
         // Delivery Formatter
         private Int32 _ValueDF;
-        public Int32 ValueDF { get { return _ValueDF; } set { _ValueDF = value; RaisePropertyChangedEvent("ValueDF"); } }
+        public Int32 ValueDF {
+            get { return _ValueDF; }
+            set { _ValueDF = value; RaisePropertyChangedEvent("ValueDF"); }
+        }
 
         private String _SuffixDF;
-        public String SuffixDF { get { return _SuffixDF; } set { _SuffixDF = value; RaisePropertyChangedEvent("SuffixDF"); } }
+        public String SuffixDF {
+            get { return _SuffixDF; }
+            set { _SuffixDF = value; RaisePropertyChangedEvent("SuffixDF"); }
+        }
 
         // Keyfile Generator
         private Int32 _ValueKF;
-        public Int32 ValueKF { get { return _ValueKF; } set { _ValueKF = value; RaisePropertyChangedEvent("ValueKF"); } }
+        public Int32 ValueKF
+        {
+            get { return _ValueKF; }
+            set { _ValueKF = value; RaisePropertyChangedEvent("ValueKF"); }
+        }
 
         //XRef Inserter
         private Int32 _ValueXI;
-        public Int32 ValueXI { get { return _ValueXI; } set { _ValueXI = value; RaisePropertyChangedEvent("ValueXI"); } }
+        public Int32 ValueXI
+        {
+            get { return _ValueXI; }
+            set { _ValueXI = value; RaisePropertyChangedEvent("ValueXI"); }
+        }
 
         private String _PathXIxlsx;
-        public String PathXIxlsx { get { return _PathXIxlsx; } set { _PathXIxlsx = value; RaisePropertyChangedEvent("PathXIxlsx"); } }
+        public String PathXIxlsx
+        {
+            get { return _PathXIxlsx; }
+            set { _PathXIxlsx = value; RaisePropertyChangedEvent("PathXIxlsx"); }
+        }
 
         // Layer Checker
         private Boolean _MultiLC;
-        public Boolean MultiLC { get { return _MultiLC; } set { _MultiLC = value; RaisePropertyChangedEvent("MultiLC"); } }
+        public Boolean MultiLC
+        { 
+            get { return _MultiLC; }
+            set { _MultiLC = value; RaisePropertyChangedEvent("MultiLC"); }
+        }
 
         private Boolean _ChangesLC;
-        public Boolean ChangesLC { get { return _ChangesLC; } set { _ChangesLC = value; RaisePropertyChangedEvent("ChangesLC"); } }
+        public Boolean ChangesLC
+        { 
+            get { return _ChangesLC; }
+            set { _ChangesLC = value; RaisePropertyChangedEvent("ChangesLC"); }
+        }
 
         private Int32 _ValueLC;
-        public Int32 ValueLC { get { return _ValueLC; } set { _ValueLC = value; RaisePropertyChangedEvent("ValueLC"); } }
+        public Int32 ValueLC
+        { 
+            get { return _ValueLC; }
+            set { _ValueLC = value; RaisePropertyChangedEvent("ValueLC"); }
+        }
 
         // Text Obj Lister
         private List<String> _TextList;
-        public List<String> TextList { get { return _TextList; } set { _TextList = value; RaisePropertyChangedEvent("TextList"); } }
+        public List<String> TextList
+        { 
+            get { return _TextList; }
+            set { _TextList = value; RaisePropertyChangedEvent("TextList"); }
+        }
 
         // Layer Lister
         private Int32 _ValueLL;
-        public Int32 ValueLL { get { return _ValueLL; } set { _ValueLL = value; RaisePropertyChangedEvent("ValueLL"); } }
+        public Int32 ValueLL
+        { 
+            get { return _ValueLL; }
+            set { _ValueLL = value; RaisePropertyChangedEvent("ValueLL"); }
+        }
 
         //Extractor
         private Int32 _ValueE;
-        public Int32 ValueE { get { return _ValueE; } set { _ValueE = value; RaisePropertyChangedEvent("ValueE"); } }
+        public Int32 ValueE
+        {
+            get { return _ValueE; }
+            set { _ValueE = value; RaisePropertyChangedEvent("ValueE"); }
+        }
 
         // Lowercase Layers
         private Boolean _MultiLCL;
-        public Boolean MultiLCL { get { return _MultiLCL; } set { _MultiLCL = value; RaisePropertyChangedEvent("MultiLCL"); } }
+        public Boolean MultiLCL
+        { 
+            get { return _MultiLCL; }
+            set { _MultiLCL = value; RaisePropertyChangedEvent("MultiLCL"); }
+        }
 
         private Boolean _ChangesLCL;
-        public Boolean ChangesLCL { get { return _ChangesLCL; } set { _ChangesLCL = value; RaisePropertyChangedEvent("ChangesLCL"); } }
+        public Boolean ChangesLCL 
+        {
+            get { return _ChangesLCL; }
+            set { _ChangesLCL = value; RaisePropertyChangedEvent("ChangesLCL"); }
+        }
 
         private Int32 _ValueLCL;
-        public Int32 ValueLCL { get { return _ValueLCL; } set { _ValueLCL = value; RaisePropertyChangedEvent("ValueLCL"); } }
+        public Int32 ValueLCL
+        { 
+            get { return _ValueLCL; }
+            set { _ValueLCL = value; RaisePropertyChangedEvent("ValueLCL"); }
+        }
 
-        #region comments
-        //public ICommand DefaultRectangleCheckedCommand
-        //{
-        //    get { return _DefaultRectangleCheckedCommand ?? (_DefaultRectangleCheckedCommand = new DelegateCommand(DefaultRectangleChecked)); }
-        //}
-
-        //private void DefaultRectangleChecked()
-        //{
-        //    LeftOfX = DwgUpdater.LeftOfXDefault;
-        //    BelowY = DwgUpdater.BelowYDefault;
-        //    RightOfX = DwgUpdater.RightOfXDefault;
-        //    AboveY = DwgUpdater.AboveYDefault;
-        //}
-
-        //private Boolean _DefaultRectangle = false;
-        //public Boolean DefaultRectangle 
-        //{ 
-        //    get { return _DefaultRectangle; }
-        //    set { _DefaultRectangle = value; RaisePropertyChangedEvent("DefaultRectangle"); } 
-        //}
-        #endregion
-
+        // List info for all available commands in info tab
+        private List<String> _CmdInfoList;
+        public List<String> CmdInfoList
+        { 
+            get { return _CmdInfoList; }
+            set { _CmdInfoList = value; RaisePropertyChangedEvent("CmdInfoList"); }
+        }
+        
         // Figure Rectangle coordinates for FBD Updater
 
         private Double _LeftOfX = DwgUpdater.LeftOfXDefault;
-        public Double LeftOfX { get { return _LeftOfX; } set { _LeftOfX = value; RaisePropertyChangedEvent("LeftOfX"); }        }
+        public Double LeftOfX
+        { 
+            get { return _LeftOfX; }
+            set { _LeftOfX = value; RaisePropertyChangedEvent("LeftOfX"); }
+        }
 
         private Double _BelowY = DwgUpdater.BelowYDefault;
-        public Double BelowY { get { return _BelowY; } set { _BelowY = value; RaisePropertyChangedEvent("BelowY"); } }
+        public Double BelowY
+        { 
+            get { return _BelowY; }
+            set { _BelowY = value; RaisePropertyChangedEvent("BelowY"); }
+        }
 
         private Double _RightOfX = DwgUpdater.RightOfXDefault;
-        public Double RightOfX { get { return _RightOfX; } set { _RightOfX = value; RaisePropertyChangedEvent("RightOfX"); } }
+        public Double RightOfX
+        { 
+            get { return _RightOfX; }
+            set { _RightOfX = value; RaisePropertyChangedEvent("RightOfX"); }
+        }
 
         private Double _AboveY = DwgUpdater.AboveYDefault;
-        public Double AboveY { get { return _AboveY; } set { _AboveY = value; RaisePropertyChangedEvent("AboveY"); } }
+        public Double AboveY
+        { 
+            get { return _AboveY; }
+            set { _AboveY = value; RaisePropertyChangedEvent("AboveY"); }
+        }
 
-        // Back end Methods 
+        // Call Back end Methods 
 
         private void ConverterTo2000()
         {
@@ -261,7 +353,7 @@ namespace AcadExts
             worker.DoWork += new DoWorkEventHandler(delegate(object sender, DoWorkEventArgs e)
                 {
                     CallMethodOnMThread(delegate { _ConverterTo2000Command.RaiseCanExecuteChanged(); });
-                    IProcessor cf2000 = new ConverterTo2000(Path, sender as BackgroundWorker);
+                    DwgProcessor cf2000 = new ConverterTo2000(Path, sender as BackgroundWorker);
                     e.Result = cf2000.Process();
                 });
 
@@ -279,13 +371,19 @@ namespace AcadExts
             worker.RunWorkerAsync();
         }
         
-        private void AddDebugInfo()
+        private void ToggleDebugInfo()
         {
             if (!DebugInfoDisplayed)
             {
                 CmdInfoList = CmdInfoList.Concat(ProgramInfo.GetDebugInfo()).ToList<String>();
                 DebugInfoDisplayed = true;
             }
+            else
+            {
+                CmdInfoList = ProgramInfo.GetCmdInfo().Concat(ProgramInfo.GetAssemblyInfo()).ToList<String>();
+                DebugInfoDisplayed = false;
+            }
+            return;
         }
 
         private void GenerateKeyfiles()
@@ -326,7 +424,7 @@ namespace AcadExts
             worker.DoWork += new DoWorkEventHandler(delegate(object sender, DoWorkEventArgs e)
                                                    {
                                                        CallMethodOnMThread(delegate { _GenerateKeyfileCommand.RaiseCanExecuteChanged(); });
-                                                       IProcessor kfg = new KeyfileGenerator(Path, sender as BackgroundWorker);
+                                                       DwgProcessor kfg = new KeyfileGenerator(Path, sender as BackgroundWorker);
                                                        e.Result = kfg.Process();
                                                    });
 
@@ -354,10 +452,11 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _UpdateFBDCommand.RaiseCanExecuteChanged(); });
-                IProcessor fu = new FBDUpdater(Path,
+                DwgProcessor fu = new FBDUpdater(Path,
                                                sender as BackgroundWorker,
                                                PathFUxml,
-                                               Tuple.Create<double, double, double, double>(LeftOfX, BelowY, RightOfX, AboveY));
+                                               Tuple.Create<double, double, double, double>(LeftOfX, BelowY, RightOfX, AboveY),
+                                               FilesNotSpecified);
                 e.Result = fu.Process();
             };
 
@@ -384,7 +483,7 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _InsXRefCommand.RaiseCanExecuteChanged(); });
-                IProcessor xi = new XRefInserter(Path, sender as BackgroundWorker, PathXIxlsx);
+                DwgProcessor xi = new XRefInserter(Path, sender as BackgroundWorker, PathXIxlsx);
                 e.Result = xi.Process();
             };
 
@@ -411,7 +510,7 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _FormatForDeliveryCommand.RaiseCanExecuteChanged(); });
-                IProcessor df = new DeliveryFormatter(Path, sender as BackgroundWorker, SuffixDF);
+                DwgProcessor df = new DeliveryFormatter(Path, sender as BackgroundWorker, SuffixDF);
                 e.Result = df.Process();
             };
 
@@ -438,7 +537,7 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _CheckLayersCommand.RaiseCanExecuteChanged(); });
-                IProcessor lc = new LayerChecker(Path, sender as BackgroundWorker, MultiLC, ChangesLC);
+                DwgProcessor lc = new LayerChecker(Path, sender as BackgroundWorker, MultiLC, ChangesLC);
                 e.Result = lc.Process();
             };
 
@@ -465,7 +564,7 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _LowercaseLayersCommand.RaiseCanExecuteChanged(); });
-                IProcessor llm = new LowercaseLayerMaker(Path, sender as BackgroundWorker);
+                DwgProcessor llm = new LowercaseLayerMaker(Path, sender as BackgroundWorker);
                 e.Result = llm.Process();
             };
 
@@ -514,7 +613,7 @@ namespace AcadExts
                 //}
 
                 CallMethodOnMThread(delegate { _LayerListerCommand.RaiseCanExecuteChanged(); });
-                IProcessor ll = new LayerLister(Path, sender as BackgroundWorker);
+                DwgProcessor ll = new LayerLister(Path, sender as BackgroundWorker);
                 e.Result = ll.Process();
             };
 
@@ -541,7 +640,7 @@ namespace AcadExts
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)
             {
                 CallMethodOnMThread(delegate { _ExtractCommand.RaiseCanExecuteChanged(); });
-                IProcessor er = new Extractor(Path, sender as BackgroundWorker);
+                DwgProcessor er = new Extractor(Path, sender as BackgroundWorker);
                 e.Result = er.Process();
             };
 

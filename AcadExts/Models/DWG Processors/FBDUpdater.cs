@@ -7,28 +7,33 @@ using System.ComponentModel;
 using System.Xml;
 using System.Xml.Linq;
 using System.Diagnostics;
+using System.IO;
 
 namespace AcadExts
 {
-    [rtn("Use XML mapping file to update reference information values in FBD DWGs for Qatar")]
+    [rtn("Use XML mapping file to update reference information text in FBD drawing files for Qatar")]
     internal sealed class FBDUpdater : DwgProcessor
     {
-        Int32 numFileTags;
+        Int32 numFiles;
         String xmlPath;
         XmlReader xmlR = null;
         readonly Tuple<double, double, double, double> Coordinates;
+        private Boolean filesNotSpecified;
 
-        public FBDUpdater(String inPath, BackgroundWorker inBw, String inXmlPath, Tuple<double, double, double, double> coordinates)
+        public FBDUpdater(String inPath, BackgroundWorker inBw, String inXmlPath, Tuple<double, double, double, double> coordinates, Boolean inFilesNotSpecified)
             : base(inPath, inBw)
         {
             Coordinates = coordinates;
             this.xmlPath = inXmlPath;
+            filesNotSpecified = inFilesNotSpecified;
         }
 
         public override String Process()
         {
             if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+
             if (!xmlPath.isFilePathOK()) { return "Invalid XML file path: " + xmlPath; }
+
             if (!String.Equals(".xml", System.IO.Path.GetExtension(xmlPath).ToLower()))
             {
                 return "XML file does not have '.xml' extension";
@@ -50,68 +55,207 @@ namespace AcadExts
                 return "XML reader could not be created in: " + _Path + " because: " + se.Message;
             }
 
-            try
-            {
-                // Get number of file tags in xml file
-                numFileTags = XDocument.Load(xmlPath).Root.Elements("file").Count();
-            }
-            catch { }
-
             StartTimer();
 
             try
             {
-                while (xmlR.Read())
+                // if files are specified
+                if (!filesNotSpecified)
                 {
-                    if (_Bw.CancellationPending)
+                    try
                     {
-                        _Logger.Log("Processing cancelled by user at dwg " + DwgCounter + " out of " + numFileTags);
-                        break;
+                        // Get number of file tags in xml file
+                        numFiles = XDocument.Load(xmlPath).Root.Elements("file").Count();
                     }
+                    catch { }
 
-                    if (xmlR.NodeType == XmlNodeType.Element && String.Equals(xmlR.Name.Trim(), "file"))
+                    while (xmlR.Read())
                     {
-                        String oldfname = xmlR.GetAttribute("oldfname");
-                        String newfname = xmlR.GetAttribute("newfname");
-
-                        Dictionary<String, Dictionary<String, String>> map = new Dictionary<String, Dictionary<String, String>>();
-
-                        map.Add("appendix", new Dictionary<string, string>());
-                        map.Add("chapter", new Dictionary<string, string>());
-                        map.Add("para0", new Dictionary<string, string>());
-                        map.Add("section", new Dictionary<string, string>());
-                        map.Add("figure", new Dictionary<string, string>());
-                        map.Add("figsheet", new Dictionary<string, string>());
-                        map.Add("figzone", new Dictionary<string, string>());
-                        map.Add("table", new Dictionary<string, string>());
-                        map.Add("tm", new Dictionary<string, string>());
-                        map.Add("wp", new Dictionary<string, string>());
-
-                        while (xmlR.Read())
+                        if (_Bw.CancellationPending)
                         {
-                            if (XmlNodeType.Element == xmlR.NodeType && String.Equals(xmlR.Name.Trim(), "map"))
-                            {
-                                String reftype = xmlR.GetAttribute("reftype");
-                                String oldVal = xmlR.GetAttribute("old").Trim();
-                                String newVal = xmlR.GetAttribute("new").Trim();
-
-                                if (String.Equals(reftype, "wp")) { map["wp"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "appendix")) { map["appendix"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "chapter")) { map["chapter"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "para0")) { map["para0"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "section")) { map["section"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "figure")) { map["figure"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "figsheet")) { map["figsheet"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "figzone")) { map["figzone"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "table")) { map["table"].Add(oldVal, newVal); }
-                                if (String.Equals(reftype, "tm")) { map["tm"].Add(oldVal, newVal); }
-                            }
-
-                            if (XmlNodeType.EndElement == xmlR.NodeType && String.Equals(xmlR.Name.Trim(), "file"))
-                            { break; }
+                            _Logger.Log("Processing cancelled by user at dwg " + DwgCounter + " out of " + numFiles);
+                            break;
                         }
 
-                        DwgUpdater dwgUpdater = new DwgUpdater(String.Concat(_Path, "\\", oldfname), String.Concat(_Path, "\\", newfname), map, _Logger, Coordinates);
+                        if (xmlR.NodeType == XmlNodeType.Element && String.Equals(xmlR.Name.Trim(), "file"))
+                        {
+                            String oldfname = xmlR.GetAttribute("oldfname");
+                            String newfname = xmlR.GetAttribute("newfname");
+
+                            Dictionary<String, Dictionary<String, String>> map = new Dictionary<String, Dictionary<String, String>>();
+
+                            map.Add("appendix", new Dictionary<string, string>());
+                            map.Add("chapter", new Dictionary<string, string>());
+                            map.Add("para0", new Dictionary<string, string>());
+                            map.Add("section", new Dictionary<string, string>());
+                            map.Add("figure", new Dictionary<string, string>());
+                            map.Add("figsheet", new Dictionary<string, string>());
+                            map.Add("figzone", new Dictionary<string, string>());
+                            map.Add("table", new Dictionary<string, string>());
+                            map.Add("tm", new Dictionary<string, string>());
+                            map.Add("wp", new Dictionary<string, string>());
+
+                            while (xmlR.Read())
+                            {
+                                if (XmlNodeType.Element == xmlR.NodeType && String.Equals(xmlR.Name.Trim(), "map"))
+                                {
+                                    String reftype = xmlR.GetAttribute("reftype");
+                                    String oldVal = xmlR.GetAttribute("old").Trim();
+                                    String newVal = xmlR.GetAttribute("new").Trim();
+
+                                    if (String.Equals(reftype, "wp")) { map["wp"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "appendix")) { map["appendix"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "chapter")) { map["chapter"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "para0")) { map["para0"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "section")) { map["section"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "figure")) { map["figure"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "figsheet")) { map["figsheet"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "figzone")) { map["figzone"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "table")) { map["table"].Add(oldVal, newVal); }
+                                    if (String.Equals(reftype, "tm")) { map["tm"].Add(oldVal, newVal); }
+                                }
+
+                                if (XmlNodeType.EndElement == xmlR.NodeType && String.Equals(xmlR.Name.Trim(), "file"))
+                                { break; }
+                            }
+
+                            DwgUpdater DwgUpdater = new DwgUpdater(String.Concat(_Path, "\\", oldfname), String.Concat(_Path, "\\", newfname), map, _Logger, Coordinates);
+
+                            try
+                            {
+                                DwgUpdater.Convert();
+                            }
+                            catch (System.IO.IOException ioe)
+                            {
+                                _Logger.Log("Could not convert file: " + oldfname + " because: " + ioe.Message);
+                                continue;
+                            }
+                            catch (System.Exception se)
+                            {
+                                _Logger.Log("Error processing file: " + oldfname + " because: " + se.Message);
+                                continue;
+                            }
+                            DwgCounter++;
+                            _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, numFiles));
+                        }
+                    }
+                }
+                // files are not specified
+                else
+                {
+                    // Create Converted folder
+                    try { Directory.CreateDirectory(_Path + "\\Converted"); }
+                    catch { return "Unable to create new directory for converted files in: " + _Path; }
+
+                    if (XDocument.Load(xmlPath).Root.Elements("file").Count() > 0)
+                    {
+                        _Logger.Log("File tags are being ignored because \"files not specified\" box was checked.");
+                    }
+
+                    List<String> dwgs = new List<String>();
+
+                    Dictionary<String, Dictionary<String, String>> map = new Dictionary<String, Dictionary<String, String>>();
+
+                    map.Add("appendix", new Dictionary<string, string>());
+                    map.Add("chapter", new Dictionary<string, string>());
+                    map.Add("para0", new Dictionary<string, string>());
+                    map.Add("section", new Dictionary<string, string>());
+                    map.Add("figure", new Dictionary<string, string>());
+                    map.Add("figsheet", new Dictionary<string, string>());
+                    map.Add("figzone", new Dictionary<string, string>());
+                    map.Add("table", new Dictionary<string, string>());
+                    map.Add("tm", new Dictionary<string, string>());
+                    map.Add("wp", new Dictionary<string, string>());
+
+                    while (xmlR.Read())
+                    {
+                        if (XmlNodeType.Element == xmlR.NodeType && String.Equals(xmlR.Name.Trim(), "map"))
+                        {
+                            String reftype = xmlR.GetAttribute("reftype");
+                            String oldVal = xmlR.GetAttribute("old").Trim();
+                            String newVal = xmlR.GetAttribute("new").Trim();
+
+                            if (String.Equals(reftype, "wp"))
+                            {
+                                try { map["wp"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "appendix"))
+                            {
+                                try { map["appendix"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "chapter"))
+                            {
+                                try { map["chapter"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "para0"))
+                            {
+                                try { map["para0"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "section"))
+                            {
+                                try { map["section"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "figure"))
+                            {
+                                try { map["figure"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "figsheet"))
+                            {
+                                try { map["figsheet"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "figzone"))
+                            {
+                                try { map["figzone"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "table"))
+                            {
+                                try { map["table"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                            if (String.Equals(reftype, "tm"))
+                            {
+                                try { map["tm"].Add(oldVal, newVal); }
+                                catch (ArgumentException) { }
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        dwgs = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", System.IO.SearchOption.TopDirectoryOnly)
+                                                  .Where(f => !f.Contains("_Converted"))
+                                                  .ToList<String>();
+                        numFiles = dwgs.Count;
+                    }
+                    catch (System.Exception se)
+                    {
+                        _Logger.Log("Could not enumerate files because: " + se.Message);
+                        return "Could not access files in: " + _Path + " because: " + se.Message;
+                    }
+
+                    foreach (String currentDwg in dwgs)
+                    {
+                        if (_Bw.CancellationPending)
+                        {
+                            _Logger.Log("Processing cancelled by user at dwg " + DwgCounter + " out of " + numFiles);
+                            break;
+                        }
+
+                        DwgUpdater dwgUpdater = new DwgUpdater(currentDwg,
+                                                               String.Concat(_Path,
+                                                                             "\\Converted\\",
+                                                                             Path.GetFileName(currentDwg)),
+                                                               map,
+                                                               _Logger,
+                                                               Coordinates);
 
                         try
                         {
@@ -119,18 +263,24 @@ namespace AcadExts
                         }
                         catch (System.IO.IOException ioe)
                         {
-                            _Logger.Log("Could not convert file: " + oldfname + " because: " + ioe.Message);
+                            _Logger.Log("Could not convert file: " + currentDwg + " because: " + ioe.Message);
                             continue;
                         }
                         catch (System.Exception se)
                         {
-                            _Logger.Log("Error processing file: " + oldfname + " because: " + se.Message);
+                            _Logger.Log("Error processing file: " + currentDwg + " because: " + se.Message);
                             continue;
                         }
+
                         DwgCounter++;
-                        _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, numFileTags));
+
+                        _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, dwgs.Count));
                     }
                 }
+            }
+            catch (ArgumentException ae)
+            {
+                _Logger.Log("Argument Exception: " + ae.Message);
             }
             catch (System.Exception se)
             {
@@ -151,7 +301,7 @@ namespace AcadExts
 
             return String.Concat(DwgCounter.ToString(),
                                  " out of ",
-                                 numFileTags.ToString(),
+                                 numFiles.ToString(),
                                  " dwgs converted in ",
                                  TimePassed);
         }

@@ -19,8 +19,6 @@ namespace AcadExts
 
         readonly static Regex TraceRegex = new Regex(@"\sat");
 
-        //private static Boolean debugAlreadyDisplayed = false;
-
         readonly static String[] AsmNamesNeeded = new String[] { "mscorlib", "Acdbmgd", "System", "accoremgd", "System.Core", 
                                                          "System.Windows.Interactivity", "PresentationFramework", "System.Xml.Linq",
                                                          "System.Xml", "PresentationCore", "System.Windows.Forms",
@@ -123,7 +121,7 @@ namespace AcadExts
             //AC1027 = AutoCAD 2013 
             //AC1032 = AutoCAD 2018 
             // Get AutoCAD version
-            InfoList.Add(String.Concat("AutoCAD default file save format: ", Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.DefaultFormatForSave.ToString()));
+            //InfoList.Add(String.Concat("AutoCAD default file save format: ", Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.DefaultFormatForSave.ToString()));
             //Autodesk.AutoCAD.ApplicationServices.Document doc = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.CurrentDocument;
             //String origFileVersion = Autodesk.AutoCAD.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database.OriginalFileVersion.ToString();
             InfoList.Add(String.Concat("AutoCAD version: ", Autodesk.AutoCAD.ApplicationServices.Application.Version.ToString()));
@@ -147,8 +145,6 @@ namespace AcadExts
         //public static String GetDebugInfo()
         public static IList<String> GetDebugInfo()
         {
-            //if (debugAlreadyDisplayed) { return new List<String>(); }
-
             List<String> detailsList = new List<String>();
 
             try
@@ -165,7 +161,7 @@ namespace AcadExts
                 detailsList.Add(String.Concat("Env. UIM? ", System.Environment.UserInteractive));
                 detailsList.Add(String.Concat(Utilities.nl, "Stack Trace: "));
 
-
+                // Format stack trace
                 List<String> stackTraceLines = TraceRegex.Split(System.Environment.StackTrace).ToList<String>();
                 stackTraceLines.RemoveAt(0);
                 stackTraceLines.ForEach(str => detailsList.Add(str.Replace(Utilities.nl, "")));
@@ -175,7 +171,6 @@ namespace AcadExts
                 ////detailsString.Append(String.Concat(Utilities.nl, "Paged Memory Size: ", Process.GetCurrentProcess().PagedMemorySize64 / toMeg, " MB"));
                 //detailsString.Append(String.Concat(Utilities.nl, "Process Exit Time: ", Process.GetCurrentProcess().ExitTime, " MB"));
 
-                //debugAlreadyDisplayed = true;
             }
             catch (System.Exception se)
             {

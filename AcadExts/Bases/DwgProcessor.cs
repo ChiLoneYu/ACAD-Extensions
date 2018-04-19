@@ -13,7 +13,7 @@ namespace AcadExts
     {
         // DWG folder path
         private readonly String _path = String.Empty;
-        protected String _Path { get { return _path; }  }
+        protected String _Path { get { return _path; } }
 
         // Processing BackgroundWorker
         private readonly BackgroundWorker _bw = null;
@@ -39,14 +39,26 @@ namespace AcadExts
         // Ctor
         public DwgProcessor(String inPath, BackgroundWorker inBw)
         {
-            if (!String.IsNullOrWhiteSpace(inPath)) { _path = inPath.TrimEnd(new[] { '\\' }); }
+            if (!String.IsNullOrWhiteSpace(inPath)) 
+            {
+                _path = inPath.TrimEnd(new[] { '\\' });
+            }
 
             _bw = inBw;
+
+            if (_Bw == null)
+            {
+                if (_Logger != null)
+                {
+                    try { _Logger.Log("BackgroundWorker is null"); }
+                    catch { }
+                }
+                throw new ArgumentNullException("inBw", "Base dwg processor needs a BackgroundWorker instance");
+            }
         }
 
         public void GetDwgList(SearchOption so)
         {
-            //_DwgList = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", so).ToList<String>();
             GetDwgList(so, (inFileStr) => { return true; });
             return;
         }
@@ -82,7 +94,7 @@ namespace AcadExts
 
         #region Template Pattern
         // In each dervied processing class, override start, finish, and perform processing methods
-        // and call below Process method from that derived class. This will ensure the same template is being
+        // and call below Process method (the template method) from view model. This will ensure the same template is being
         // used for all dwg processing functions.
 
         //public abstract void initialize();

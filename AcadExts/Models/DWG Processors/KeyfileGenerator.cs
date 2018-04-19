@@ -460,6 +460,8 @@ namespace AcadExts
             _Logger.Dispose();
 
             return (String.Concat(DwgCounter.ToString(),
+                                  " out of ",
+                                  NumDwgs,
                                   " DWGs processed in ",
                                   TimePassed,
                                   ". ",

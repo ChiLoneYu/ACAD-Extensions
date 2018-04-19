@@ -58,7 +58,11 @@ namespace AcadExts
             // Get dwgs
             try
             {
-                GetDwgList(SearchOption.TopDirectoryOnly, delegate(String inFile) { return (System.IO.Path.GetFileNameWithoutExtension(inFile).Length >= 13);});
+                GetDwgList(SearchOption.TopDirectoryOnly,
+                           delegate(String inFile)
+                           { 
+                               return (System.IO.Path.GetFileNameWithoutExtension(inFile).Length >= 13);
+                           });
             }
             catch (System.Exception se)
             {
@@ -197,34 +201,35 @@ namespace AcadExts
                             Point3d ExtMaxBefore = db.Extmax;
 
                             #region Get all extra objects that are not any of the specified types, and add them all to extraTMObjects list
-                            foreach (Entity ent in ToEach.toEachEntity(db, acTrans, delegate(Entity inEnt)
-                            {
-                                if (inEnt.Layer.isFramePageLayerName())
-                                {
-                                    if (inEnt.GetType() == typeof(DBText))
-                                    {
-                                        DBText dbt = inEnt as DBText;
-                                        return !(dbt.TextString.isTMNum() ||
-                                                 dbt.TextString.isPageNum() ||
-                                                 dbt.TextString.isPrefixNoteText());
-                                    }
-                                    if (inEnt.GetType() == typeof(BlockReference))
-                                    {
-                                        BlockReference br = inEnt as BlockReference;
-                                        return !(br.isFigCap() ||
-                                                 br.isPrefixNoteBR());
-                                    }
-                                    return true;
-                                }
-                                return false;
-                            }))
-                            {
-                                if (ent.GetType() == typeof(DBText)) { String type = ent.ToString(); DBText dbt = ent as DBText; extraTMObjects.Add(currentDWGstring + " (" + ms + "): Frame Page Layer: " + ent.Layer + " contains extra entity: " + type.Substring(type.LastIndexOf('.') + 1) + " : " + dbt.TextString); }
-                                else
-                                {
-                                    String type = ent.ToString(); extraTMObjects.Add(currentDWGstring + " (" + ms + "): Frame Page Layer: " + ent.Layer + " contains extra entity: " + type.Substring(type.LastIndexOf('.') + 1));
-                                }
-                            }
+                            //foreach (Entity ent in ToEach.toEachEntity(db, acTrans, delegate(Entity inEnt)
+                            //{
+                            //    if (inEnt.Layer.isFramePageLayerName())
+                            //    {
+                            //        if (inEnt.GetType() == typeof(DBText))
+                            //        {
+                            //            DBText dbt = inEnt as DBText;
+                            //            String ut = dbt.TextString.Trim().ToUpper();
+                            //            return !((ut.Contains("TM") && (ut.Contains("-")) && ut.HasNums()) ||
+                            //                     (ut.StartsWith("IV") && ut.Contains("-")) ||
+                            //                     (ut.Contains("PREFIX ALL") && ut.Contains("DESIGNATIONS WITH")));
+                            //        }
+                            //        if (inEnt.GetType() == typeof(BlockReference))
+                            //        {
+                            //            BlockReference br = inEnt as BlockReference;
+                            //            return !(br.Name.Trim().ToUpper().StartsWith("FCL1") ||
+                            //                     br.Name.Trim().ToUpper().Contains("PRENOTE"));
+                            //        }
+                            //        return true;
+                            //    }
+                            //    return false;
+                            //}))
+                            //{
+                            //    if (ent.GetType() == typeof(DBText)) { String type = ent.ToString(); DBText dbt = ent as DBText; extraTMObjects.Add(currentDWGstring + " (" + ms + "): Frame Page Layer: " + ent.Layer + " contains extra entity: " + type.Substring(type.LastIndexOf('.') + 1) + " : " + dbt.TextString); }
+                            //    else
+                            //    {
+                            //        String type = ent.ToString(); extraTMObjects.Add(currentDWGstring + " (" + ms + "): Frame Page Layer: " + ent.Layer + " contains extra entity: " + type.Substring(type.LastIndexOf('.') + 1));
+                            //    }
+                            //}
                             #endregion
 
                             #region add GTYPE layer if it doesnt already exist and (0,0,0) point
