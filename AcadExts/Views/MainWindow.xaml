@@ -7,14 +7,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
         mc:Ignorable="d"
-        Title="Acad Extensions" Height="381.4" Width="779.2" ResizeMode="NoResize">
+        Title="AutoCAD Extensions" Height="360" Width="800" MinWidth="800" MinHeight="360">
+
     <Window.Resources>
-        <!--<Style TargetType="Label">
-            <Setter Property="Width" Value="Auto"/>
-            <Setter Property="Height" Value="Auto"/>
-        </Style>-->
         <Style x:Key="TabHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontSize" Value="11"/>
         </Style>
         <Style TargetType="CheckBox">
             <Setter Property="VerticalAlignment" Value="Top"/>
@@ -30,7 +27,7 @@
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="30"/>
-            <Setter Property="Margin" Value="4,4,4,4"/>
+            <Setter Property="Margin" Value="4"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -55,7 +52,9 @@
         <Style BasedOn="{StaticResource {x:Type Button}}"
                TargetType="Button"
                x:Key="SelectFolder">
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="12,0"/>
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style BasedOn="{StaticResource {x:Type Button}}"
@@ -97,7 +96,7 @@
         <TextBox Text="{Binding Path=Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28"></TextBox>
         <Button Content="Select Folder" Style="{StaticResource SelectFolder}" Grid.Column="1" Height="28">
             <i:Interaction.Behaviors>
-                <!--<local:FolderDialogBehavior FolderPath="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>-->
+                <local:FolderDialogBehavior FolderPath="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             </i:Interaction.Behaviors>
         </Button>
 
@@ -118,6 +117,7 @@
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
+
                     <Button Grid.Row="1" Grid.Column="1" Command ="{Binding ConverterTo2000Command}" Content="Convert to 2000" Style="{StaticResource Command}"/>
                     <ProgressBar Value = "{Binding ValueTo2000}"  Grid.Row="1"/>
                 </Grid>
@@ -168,56 +168,87 @@
                 <TabItem.Header>
                     <TextBlock Text="Update FBDs"  Style="{StaticResource TabHeaderStyle}"/>
                 </TabItem.Header>
+                
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height=".2*"></RowDefinition>
-                        <RowDefinition ></RowDefinition>
-                        <RowDefinition Height=".8*" ></RowDefinition>
-                        <RowDefinition Height="1.6*"></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".8*"></RowDefinition>
+                        <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
 
-                    <Label Content="XML path" Grid.Row="1"/>
-                    <TextBox Grid.Row="1" Text="{Binding Path=PathFUxml, UpdateSourceTrigger=PropertyChanged}"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <Label Content="XML path"/>
+                        <TextBox Text="{Binding Path=PathFUxml, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    
+                    <ProgressBar Grid.Row="1" Value="{Binding Path=ValueFU}"></ProgressBar>
 
-                    <ProgressBar Grid.Row="2" Value="{Binding Path=ValueFU}"></ProgressBar>
+                    <StackPanel VerticalAlignment="Center" Grid.Column="1">
+                        <!--<Button Content="Select File" Style="{StaticResource SelectFile}"/>-->
+                        <local:FileDialog Content="Select File" Style="{StaticResource SelectFile}" FilePath="{Binding PathFUxml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <CheckBox IsChecked="{Binding Path=FilesNotSpecified}" HorizontalAlignment="Center" Content="Files not specified"></CheckBox>
+                    </StackPanel>
 
-                    <!--<Button Content="Select File" Grid.Column="1" Grid.Row="1" Style="{StaticResource SelectFile}"/>-->
-                    <CheckBox VerticalAlignment="Bottom" IsChecked="{Binding Path=FilesNotSpecified}" HorizontalAlignment="Center" Content="Files not specified" Grid.Row="1" Grid.Column="1"></CheckBox>
-                    <!--<local:FileDialog Content="Select File" Grid.Row="1" Grid.Column="1"  Style="{StaticResource SelectFile}" FilePath="{Binding PathFUxml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>-->
-                    <Button Command= "{Binding UpdateFBDCommand}" Content="Update FBDs" Style="{StaticResource Command}"  Grid.Row="2" Grid.Column="1"/>
+                    <Button Command= "{Binding UpdateFBDCommand}" Content="Update FBDs" Style="{StaticResource Command}"  Grid.Row="1" Grid.Column="1"/>
+                    
+                    <StackPanel Grid.Row="2">                  
+                        <Label Content="Figure Text Rectangle Size" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16"></Label>                  
+                        <Grid Margin="4" VerticalAlignment="Bottom" Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition></RowDefinition>
+                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <Label Margin="0" HorizontalAlignment="Center" Content="Left of X"/>
+                                <TextBox Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <Label HorizontalAlignment="Center" Content="Below Y" Margin="0"/>
+                                <TextBox Text="{Binding BelowY}" Width="70"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <Label HorizontalAlignment="Center" Content="Right of X" Margin="0"/>
+                                <TextBox Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <Label Margin="0" HorizontalAlignment="Center"  Grid.Column="3" Content="Above Y"/>
+                                <TextBox Text="{Binding AboveY}" Width="70"/>
+                            </StackPanel>
+                        </Grid>
 
-                    <Grid Grid.Row="3" Grid.Column="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition></RowDefinition>
-                            <RowDefinition Height="1.7*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <!--<Grid >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
 
-                        <Label Grid.ColumnSpan="4" Content="Figure Text Rectangle Size" HorizontalAlignment="Center" FontSize="16"></Label>
+                            <Label Margin="0" Grid.Column="0" Content="Left of X"  HorizontalAlignment="Center" VerticalAlignment="Top" />
+                            <TextBox Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="0" Width="70"></TextBox>
 
-                        <Label Margin="0" Grid.Row="2" Grid.Column="0" Content="Left of X"  HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <TextBox Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="0" Width="70"></TextBox>
+                            <Label Margin="0" Grid.Column="1" Content="Below Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                            <TextBox Text="{Binding BelowY}" Grid.Row="2" Grid.Column= "1" Width="70"></TextBox>
 
-                        <Label Margin="0" Grid.Row="2" Grid.Column="1" Content="Below Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <TextBox Text="{Binding BelowY}" Grid.Row="2" Grid.Column= "1" Width="70"></TextBox>
+                            <Label Margin="0" Grid.Column="2" Content="Right of X" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                            <TextBox Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"></TextBox>
 
-                        <Label Margin="0" Grid.Row="2" Grid.Column="2" Content="Right of X" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <TextBox Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"></TextBox>
+                            <Label Margin="0" Grid.Column="3" Content="Above Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
+                            <TextBox Text="{Binding AboveY}" Grid.Row="2" Grid.Column="3" Width="70"></TextBox>
+                        </Grid>-->
+                    </StackPanel>
 
-                        <Label Margin="0" Grid.Row="2" Grid.Column="3" Content="Above Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                        <TextBox Text="{Binding AboveY}" Grid.Row="2" Grid.Column="3" Width="70"></TextBox>
-                    </Grid>
-
-                    <Button Command="{Binding DefaultRectangleCheckedCommand}" Content="Use Defaults" Grid.Column="1" Grid.Row="3">
+                    <Button  Content="Use Defaults" Grid.Column="1" Grid.Row="3">
                         <i:Interaction.Triggers>
                             <i:EventTrigger EventName="Clicked">
                                 <i:InvokeCommandAction Command="{Binding DefaultRectangleCheckedCommand}"/>
@@ -239,14 +270,18 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Label Content="Excel path" Grid.Row="1"/>
-                    <TextBox Text= "{Binding Path=PathXIxlsx, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1"/>
-                    <!--<Button Content="Select File" Grid.Column="1" Grid.Row="1" Style="{StaticResource SelectFile}"/>-->
-                    <!--<local:FileDialog Content="Select File" Grid.Row="1" Grid.Column="1"  Style="{StaticResource SelectFile}" FilePath="{Binding PathXIxlsx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>-->
+
+                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
+                        <Label Content="Excel Path"/>
+                        <TextBox Text= "{Binding Path=PathXIxlsx, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    
+                    <!--<Button VerticalAlignment="Center" Content="Select File" Grid.Column="1" Grid.Row="1" Style="{StaticResource SelectFile}"/>-->
+                    <local:FileDialog VerticalAlignment="Center" Content="Select File" Grid.Row="1" Grid.Column="1"  Style="{StaticResource SelectFile}" FilePath="{Binding PathXIxlsx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     <Button Command= "{Binding InsXRefCommand}" Content="Insert XRefs" Style="{StaticResource Command}" Grid.Column="2" Grid.Row="4"/>
                     <ProgressBar Value= "{Binding Path=ValueXI}" Grid.Row="4"/>
                 </Grid>
@@ -263,12 +298,17 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Label Content="Suffix" Grid.Row="1"/>
-                    <TextBox Text="{Binding Path=SuffixDF, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Width="150" HorizontalAlignment="Left"/>
+                    
+                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
+                        <Label Content="Suffix"/>
+                        <TextBox Text="{Binding Path=SuffixDF, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    
+                   
                     <Button Command= "{Binding FormatForDeliveryCommand}" Content="Format for Delivery" Style="{StaticResource Command}" Grid.Row="4" Grid.Column="1"/>
                     <ProgressBar Value="{Binding Path=ValueDF}" Grid.Row="4"/>
                 </Grid>
@@ -289,10 +329,15 @@
                         <RowDefinition></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Button Command= "{Binding CheckLayersCommand}" Content="Check Layers" Style="{StaticResource Command}" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top"/>
+                    
                     <ProgressBar Value="{Binding Path=ValueLC}" Grid.Row="1"/>
-                    <CheckBox Content="Make Changes" IsChecked="{Binding ChangesLC}" Grid.Row="1" Grid.Column="1" Margin="19.2,34.8,32.2,0"/>
-                    <CheckBox Content="Multiple Directories" IsChecked="{Binding MultiLC}" Grid.Row="1" Grid.Column="1" Margin="19.2,52.8,0.2,0" />
+                    
+                    <StackPanel VerticalAlignment="Center" Grid.Row="1" Grid.Column="1">
+                        <Button Command= "{Binding CheckLayersCommand}" Content="Check Layers" Style="{StaticResource Command}"/>
+                        <CheckBox HorizontalAlignment="Center" Content="Make Changes" IsChecked="{Binding ChangesLC}"/>
+                        <CheckBox HorizontalAlignment="Center" Content="Multiple Directories" IsChecked="{Binding MultiLC}"/>
+                    </StackPanel>
+                    
                 </Grid>
             </TabItem>
 
@@ -317,7 +362,7 @@
             </TabItem>
 
             <!-- Extract files -->
-            <TabItem>
+            <!--<TabItem>
                 <TabItem.Header>
                     <TextBlock Text="Extract" Style="{StaticResource TabHeaderStyle}"/>
                 </TabItem.Header>
@@ -334,10 +379,10 @@
                     <Button Command= "{Binding ExtractCommand}" Content="Extract Files" Style="{StaticResource Command}" Grid.Row="1" Grid.Column="1"/>
                     <ProgressBar Value="{Binding Path=ValueE}" Grid.Row="1"/>
                 </Grid>
-            </TabItem>
+            </TabItem>-->
 
             <!-- List Text -->
-            <TabItem>
+            <!--<TabItem>
                 <TabItem.Header>
                     <TextBlock Text="List Text Objs" Style="{StaticResource TabHeaderStyle}"/>
                 </TabItem.Header>
@@ -350,9 +395,35 @@
                         <ColumnDefinition></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Button Command= "{Binding ListObjectsCommand}" Content="List all text in current DWG" HorizontalAlignment="Left" Style="{StaticResource Command}" Height="24"  Width="165" Margin="4,0,0,0" />
-                    <!--<TextBox Text="{Binding Path=ObjList}" Grid.Row="1" IsReadOnly="True" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Margin="4,0,4,4" AllowDrop="False" VerticalContentAlignment="Top"/>-->
+                    --><!--<TextBox Text="{Binding Path=ObjList}" Grid.Row="1" IsReadOnly="True" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Margin="4,0,4,4" AllowDrop="False" VerticalContentAlignment="Top"/>--><!--
                     <ListView Grid.Row="1" Margin="3,0,3,3" Padding="2" ItemsSource="{Binding TextList}" FontSize="14"/>
                     <Label Content="Text : Layer : Position : Block" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Grid>
+            </TabItem>-->
+
+            <!-- Layer Copier-->
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Layer Copy" Style="{StaticResource TabHeaderStyle}"/>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
+                        <Label Content="Text file path for new layer mappings"/>
+                        <TextBox Text="{Binding PathCopyMap, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <local:FileDialog Grid.Column ="1"  Grid.Row="1" Content="Select File" Style="{StaticResource SelectFile}" FilePath="{Binding PathCopyMap, Mode=TwoWay}"/>
+                    <ProgressBar Grid.Row="2" Value="{Binding Path=ValueLCO}"/>
+                    <Button Command="{Binding CopyLayerCommand}" Grid.Row="2" Grid.Column="1" Content="Run"/>
                 </Grid>
             </TabItem>
 
@@ -368,7 +439,7 @@
                     </ScrollViewer>-->
                 </Grid>
             </TabItem>
-
+            
         </TabControl>
     </Grid>
 </Window>

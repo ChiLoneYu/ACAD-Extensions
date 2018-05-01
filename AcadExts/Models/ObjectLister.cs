@@ -10,7 +10,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace AcadExts
 {
-    [rtn("Lists info about all text objects in all blocks in the currently opened DWG")]
+    //[rtn("Lists info about all text objects in all blocks in the currently opened DWG")]
     internal sealed class ObjectLister
     {
         //private readonly String path = String.Empty;

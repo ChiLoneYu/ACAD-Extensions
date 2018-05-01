@@ -35,7 +35,7 @@ namespace AcadExts
 
             FileInfo textReport;
 
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
             try
             {
@@ -47,10 +47,18 @@ namespace AcadExts
                 return "Could not open checker log file in: " + _Path;
             }
 
-            try { _Logger = new Logger(_Path + "\\LayerCheckerErrorLog.txt"); }
-            catch { return "Could not create error log file in: " + _Path; }
+            try
+            {
+                BeforeProcessing();
+            }
+            catch(System.Exception se)
+            {
+                return "Layer Checker Exception: " + se.Message;
+            }
+            //try { _Logger = new Logger(_Path + "\\LayerCheckerErrorLog.txt"); }
+            //catch { return "Could not create error log file in: " + _Path; }
 
-            StartTimer();
+            //StartTimer();
 
             #region Get dwgs and create checked dir if multi dir box is checked
 
@@ -255,12 +263,16 @@ namespace AcadExts
                     catch { _Logger.Log("Couldn't delete empty check file"); }
                 }
 
-                _Logger.Dispose();
-
-                StopTimer();
+                AfterProcessing();
             }
 
-            return String.Concat(DwgCounter.ToString(), " out of ", NumDwgs.ToString(), " dwgs processed in ", TimePassed);
+            return String.Concat(DwgCounter.ToString(),
+                " out of ",
+                NumDwgs.ToString(),
+                " dwgs processed in ",
+                TimePassed,
+                ". ",
+                (_Logger.ErrorCount > 0) ? ("Error Log: " + _Logger.Path) : ("No errors found."));
         }
     }
 }

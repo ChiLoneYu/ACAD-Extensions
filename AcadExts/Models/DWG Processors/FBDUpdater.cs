@@ -30,7 +30,15 @@ namespace AcadExts
 
         public override String Process()
         {
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            try
+            {
+                BeforeProcessing();
+            }
+            catch(System.Exception se)
+            {
+                return "FBD Updater Exception: " + se.Message;
+            }
 
             if (!xmlPath.isFilePathOK()) { return "Invalid XML file path: " + xmlPath; }
 
@@ -39,11 +47,9 @@ namespace AcadExts
                 return "XML file does not have '.xml' extension";
             }
 
-            try { _Logger = new Logger(_Path + "\\updatefbdsLog.txt"); }
-            catch (System.Exception se) { return "Could not create log file in: " + _Path + " because: " + se.Message; }
+            //try { _Logger = new Logger(_Path + "\\updatefbdsLog.txt"); }
+            //catch (System.Exception se) { return "Could not create log file in: " + _Path + " because: " + se.Message; }
 
-            //try { dwgFileArray = System.IO.Directory.GetDirectories(Path, "*.dwg"); }
-            //catch { return "Could not get DWG files in: " + Path; }
 
             XmlReaderSettings xmlRSettings = new XmlReaderSettings();
             xmlRSettings.IgnoreWhitespace = true;
@@ -55,7 +61,7 @@ namespace AcadExts
                 return "XML reader could not be created in: " + _Path + " because: " + se.Message;
             }
 
-            StartTimer();
+            //StartTimer();
 
             try
             {
@@ -152,7 +158,7 @@ namespace AcadExts
                         _Logger.Log("File tags are being ignored because \"files not specified\" box was checked.");
                     }
 
-                    List<String> dwgs = new List<String>();
+                    //List<String> dwgs = new List<String>();
 
                     Dictionary<String, Dictionary<String, String>> map = new Dictionary<String, Dictionary<String, String>>();
 
@@ -174,6 +180,8 @@ namespace AcadExts
                             String reftype = xmlR.GetAttribute("reftype");
                             String oldVal = xmlR.GetAttribute("old").Trim();
                             String newVal = xmlR.GetAttribute("new").Trim();
+
+                            // ignore repeat keys
 
                             if (String.Equals(reftype, "wp"))
                             {
@@ -230,10 +238,11 @@ namespace AcadExts
 
                     try
                     {
-                        dwgs = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", System.IO.SearchOption.TopDirectoryOnly)
-                                                  .Where(f => !f.Contains("_Converted"))
-                                                  .ToList<String>();
-                        numFiles = dwgs.Count;
+                        GetDwgList(SearchOption.TopDirectoryOnly);
+                        //dwgs = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", System.IO.SearchOption.TopDirectoryOnly)
+                        //                          .Where(f => !f.Contains("_Converted"))
+                        //                          .ToList<String>();
+                        numFiles = NumDwgs;
                     }
                     catch (System.Exception se)
                     {
@@ -241,7 +250,7 @@ namespace AcadExts
                         return "Could not access files in: " + _Path + " because: " + se.Message;
                     }
 
-                    foreach (String currentDwg in dwgs)
+                    foreach (String currentDwg in DwgList)
                     {
                         if (_Bw.CancellationPending)
                         {
@@ -274,7 +283,8 @@ namespace AcadExts
 
                         DwgCounter++;
 
-                        _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, dwgs.Count));
+                        try { _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, NumDwgs)); }
+                        catch { }
                     }
                 }
             }
@@ -289,10 +299,7 @@ namespace AcadExts
 
             finally
             {
-                StopTimer();
-
-                // Close logger
-                _Logger.Dispose();
+                AfterProcessing();
 
                 // Close XML reader
                 try { xmlR.Close(); }
@@ -303,7 +310,9 @@ namespace AcadExts
                                  " out of ",
                                  numFiles.ToString(),
                                  " dwgs converted in ",
-                                 TimePassed);
+                                 TimePassed,
+                                 ". ",
+                                 (_Logger.ErrorCount > 0) ? ("Error Log: " + _Logger.Path) : ("No errors found."));
         }
     }
 }

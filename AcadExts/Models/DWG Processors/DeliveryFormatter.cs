@@ -28,13 +28,21 @@ namespace AcadExts
             Regex FileFormat = new System.Text.RegularExpressions.Regex(@"^m(\d){6}([a-z]{0,2})?$");
             Regex LayerFormat = new System.Text.RegularExpressions.Regex(@"^m(\d){6}([a-z]){0,2}-(\w){1,2}$");
 
-            StartTimer();
+            try
+            {
+                BeforeProcessing();
+            }
+            catch(System.Exception se)
+            {
+                return "RPSTL Gov. Delivery Exception: " + se.Message;
+            }
+            //StartTimer();
 
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
-            // Open error logger
-            try { _Logger = new Logger(_Path + "\\RpstlDeliveryErrors.txt"); }
-            catch { return "Could not write log file in: " + _Path; }
+            //// Open error logger
+            //try { _Logger = new Logger(_Path + "\\RpstlDeliveryErrors.txt"); }
+            //catch { return "Could not write log file in: " + _Path; }
 
             // Get all DWG files
             try { GetDwgList(SearchOption.TopDirectoryOnly); }
@@ -146,8 +154,7 @@ namespace AcadExts
             catch (System.Exception e) { _Logger.Log("Unhandled exception: " + e.Message); return "Unhandled exception: " + e.Message; }
             finally
             {
-                _Logger.Dispose();
-                StopTimer();
+                AfterProcessing();
             }
 
             return String.Concat(DwgCounter,

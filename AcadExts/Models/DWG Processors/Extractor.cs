@@ -9,57 +9,68 @@ using System.Diagnostics;
 
 namespace AcadExts
 {
-    [rtn("Copies dwgs in all subdirectories to top directory")]
+    //[rtn("Copies dwgs in all subdirectories to top directory")]
     internal sealed class Extractor : DwgProcessor
     {
-        
         public Extractor(String inPath, BackgroundWorker inBw) : base(inPath, inBw)
         {
         }
         
         public override String Process()
         {
-            if (!CheckDirPath())
-            { return String.Concat("Invalid path: ", _Path); }
-
-            try { _Logger = new Logger(_Path + "\\ExtractErrors.txt"); }
-            catch { return "Could not initiate log file in: " + _Path; }
+            try
+            {
+                BeforeProcessing();
+            }
+            catch(System.Exception se)
+            {
+                return "Extraction Exception: " + se.Message;       
+            }
 
             try { GetDwgList(SearchOption.AllDirectories); }
             catch(System.Exception se)
             {
+                _Logger.Dispose();
                 return "Could not access all files in: " + _Path + " because: " + se.Message; 
             }
 
-            StartTimer();
-
-            foreach(String currentFile in DwgList)
+            try
             {
-                String newFilePath = String.Concat(_Path, "\\", System.IO.Path.GetFileName(currentFile));
-
-                try { File.Copy(currentFile, newFilePath, false); }
-                
-                catch(IOException ioe)
-                { _Logger.Log(String.Concat("File already exists in top directory: ", currentFile, " : ", ioe.Message)); continue; }
-                
-                catch (System.Exception se)
-                { _Logger.Log(String.Concat("Error copying file: ", currentFile, " : ", se.Message)); continue; }
-
-                DwgCounter++;
-
-                try { _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, NumDwgs)); }
-                catch { _Logger.Log("Progress bar error"); }
-
-                if (_Bw.CancellationPending)
+                foreach (String currentFile in DwgList)
                 {
-                    _Logger.Log("Extractor cancelled by user at dwg " + DwgCounter.ToString() + " out of " + NumDwgs);
-                    break;
+                    String newFilePath = String.Concat(_Path, "\\", System.IO.Path.GetFileName(currentFile));
+
+                    try { File.Copy(currentFile, newFilePath, false); }
+
+                    catch (IOException ioe)
+                    { 
+                        _Logger.Log(String.Concat("File already exists in top directory: ", currentFile, " : ", ioe.Message));
+                        continue; 
+                    }
+
+                    catch (System.Exception se)
+                    { _Logger.Log(String.Concat("Error copying file: ", currentFile, " : ", se.Message)); continue; }
+
+                    DwgCounter++;
+
+                    try { _Bw.ReportProgress(Utilities.GetPercentage(DwgCounter, NumDwgs)); }
+                    catch { }
+
+                    if (_Bw.CancellationPending)
+                    {
+                        _Logger.Log("Extractor cancelled by user at dwg " + DwgCounter.ToString() + " out of " + NumDwgs);
+                        break;
+                    }
                 }
             }
-
-            StopTimer();
-
-            _Logger.Dispose();
+            catch(System.Exception se)
+            {
+                return "Error: " + se.Message;
+            }
+            finally
+            {
+                AfterProcessing();
+            }
 
             return String.Concat(DwgCounter.ToString(), " out of ",
                                  NumDwgs, " DWGs copied in ",

@@ -22,16 +22,25 @@ namespace AcadExts
         // copnvert all layer names to lowercase
         public override String Process()
         {
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            //try
+            //{
+            //    _Logger = new Logger(String.Concat(_Path, "\\LowercaseLayerErrorLog.txt"));
+            //}
+            //catch (System.Exception se)
+            //{
+            //    return "Could not create log file in: " + _Path + " because: " + se.Message;
+            //}
 
             try
             {
-                _Logger = new Logger(String.Concat(_Path, "\\LowercaseLayerErrorLog.txt"));
+                BeforeProcessing();
             }
             catch (System.Exception se)
             {
-                return "Could not create log file in: " + _Path + " because: " + se.Message;
+                //_Logger.Dispose();
+                return "Lowercase layer processing exception: " + se.Message;
             }
 
             try { GetDwgList(SearchOption.TopDirectoryOnly); }
@@ -42,7 +51,7 @@ namespace AcadExts
                 return "Could not get all dwg files";
             }
 
-            StartTimer();
+            //StartTimer();
 
             try
             {
@@ -103,8 +112,7 @@ namespace AcadExts
             catch (System.Exception se) { _Logger.Log(String.Concat("Error: ", se.Message)); return "Processing error: " + se.Message; }
             finally
             {
-                StopTimer();
-                _Logger.Dispose();
+                AfterProcessing();
             }
 
             return String.Concat(" ", DwgCounter.ToString(), " out of ", NumDwgs, " dwgs processed in ", TimePassed);

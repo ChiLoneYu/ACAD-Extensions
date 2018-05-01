@@ -12,24 +12,25 @@ namespace AcadExts
     internal abstract class DwgProcessor : IProcessor
     {
         // DWG folder path
-        private readonly String _path = String.Empty;
-        protected String _Path { get { return _path; } }
+        protected String _Path { get; private set; } 
 
         // Processing BackgroundWorker
-        private readonly BackgroundWorker _bw = null;
-        protected BackgroundWorker _Bw { get { return _bw; } }
+        //private readonly BackgroundWorker _bw = null;
+        //protected BackgroundWorker _Bw { get { return _bw; } }
+        protected BackgroundWorker _Bw { get; private set; }
 
         // Error logger
         protected Logger _Logger { get; set; }
 
         // Processing timer
-        private System.Diagnostics.Stopwatch timer { get; set; }
+        protected System.Diagnostics.Stopwatch timer { get; set; }
 
         // # of dwgs in list
         protected Int32 NumDwgs { get { return DwgList.Count; } }
 
-        private List<String> _DwgList;
-        protected List<String> DwgList { get { return _DwgList; } }
+        //private List<String> _DwgList;
+        //protected List<String> DwgList { get { return _DwgList; } }
+        protected List<String> DwgList { get; private set; }
 
         private Int32 _DwgCounter = 0;
         protected Int32 DwgCounter { get { return _DwgCounter; } set { _DwgCounter = value; } }
@@ -41,10 +42,10 @@ namespace AcadExts
         {
             if (!String.IsNullOrWhiteSpace(inPath)) 
             {
-                _path = inPath.TrimEnd(new[] { '\\' });
+                _Path = inPath.TrimEnd(new[] { '\\' });
             }
 
-            _bw = inBw;
+            _Bw = inBw;
 
             if (_Bw == null)
             {
@@ -57,6 +58,38 @@ namespace AcadExts
             }
         }
 
+        protected virtual void BeforeProcessing()
+        {
+            // Check PDF path
+            if (!_Path.isDirectoryPathOK())
+            {
+                throw new System.IO. DirectoryNotFoundException(String.Concat("Folder not found: ", _Path));
+            }
+
+            // Open Logger
+            try { _Logger = new Logger(String.Concat(/*System.IO.Path.GetDirectoryName()*/_Path, "\\ErrorLog.txt")); }
+            catch
+            {
+                try { _Logger.Dispose(); } catch { }
+                throw;
+            }
+
+            // Start timer
+            timer = Stopwatch.StartNew();
+        }
+
+        protected virtual void AfterProcessing()
+        {
+            // Stop timer
+            if (timer.IsRunning && timer != null)
+            {
+                timer.Stop();
+            }
+
+            // Close logger
+            try { _Logger.Dispose(); } catch { }
+        }
+
         public void GetDwgList(SearchOption so)
         {
             GetDwgList(so, (inFileStr) => { return true; });
@@ -65,7 +98,7 @@ namespace AcadExts
 
         public void GetDwgList(SearchOption so, Predicate<String> filter)
         {
-            _DwgList = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", so).ToList<String>().FindAll(filter);
+            DwgList = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", so).ToList<String>().FindAll(filter);
             return;
         }
 

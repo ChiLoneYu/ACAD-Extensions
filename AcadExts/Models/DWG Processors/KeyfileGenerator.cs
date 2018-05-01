@@ -32,19 +32,28 @@ namespace AcadExts
 
         public override String Process()
         {
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
-
             try
             {
-                _Logger = new Logger(String.Concat(_Path, "\\KeyfileErrors.txt"));
+                BeforeProcessing();
             }
-            catch (System.Exception se)
+            catch(System.Exception se)
             {
-                // FATAL ERROR
-                return "Could not create log file in: " + _Path + " because: " + se.Message;
+                _Logger.Dispose();
+                return "Keyfile Generation Exception" + se.Message;
             }
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
-            StartTimer();
+            //try
+            //{
+            //    _Logger = new Logger(String.Concat(_Path, "\\KeyfileErrors.txt"));
+            //}
+            //catch (System.Exception se)
+            //{
+            //    // FATAL ERROR
+            //    return "Could not create log file in: " + _Path + " because: " + se.Message;
+            //}
+
+            //StartTimer();
 
             // Get all DWG files
             try
@@ -455,9 +464,7 @@ namespace AcadExts
                 }
             }
 
-            StopTimer();
-
-            _Logger.Dispose();
+            AfterProcessing();
 
             return (String.Concat(DwgCounter.ToString(),
                                   " out of ",
@@ -465,7 +472,7 @@ namespace AcadExts
                                   " DWGs processed in ",
                                   TimePassed,
                                   ". ",
-                                  (_Logger.ErrorCount > 0) ? ("Error Log: " + _Logger.Path) : ("No errors found")));
+                                  (_Logger.ErrorCount > 0) ? ("Error Log: " + _Logger.Path) : ("No errors found.")));
         }
     }
 }

@@ -39,29 +39,40 @@ namespace AcadExts
 
         public override String Process()
         {
-            // Validate paths
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
-            if (!ExcelPath.isFilePathOK()) { return "Invalid Excel file: " + ExcelPath; }
-
-            StartTimer();
-
-            // Open error logger
             try
             {
-                _Logger = new Logger(_Path + "\\InsertXRefErrorLog.txt");
+                BeforeProcessing();
             }
             catch (System.Exception se)
             {
-                return "Could not create log file in: " + _Path + " because: " + se.Message;
+                //_Logger.Dispose();
+                return "XREF Insertion processing exception: " + se.Message;
             }
+
+            // Validate paths
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
+            if (!ExcelPath.isFilePathOK()) { return "Invalid Excel file: " + ExcelPath; }
+
+            //StartTimer();
+
+            // Open error logger
+            //try
+            //{
+            //    _Logger = new Logger(_Path + "\\InsertXRefErrorLog.txt");
+            //}
+            //catch (System.Exception se)
+            //{
+            //    return "Could not create log file in: " + _Path + " because: " + se.Message;
+            //}
 
             // Get dwgs
             try
             {
                 GetDwgList(SearchOption.TopDirectoryOnly,
                            delegate(String inFile)
-                           { 
-                               return (System.IO.Path.GetFileNameWithoutExtension(inFile).Length >= 13);
+                           {
+                               return true;
+                               //return (System.IO.Path.GetFileNameWithoutExtension(inFile).Length >= 13);
                            });
             }
             catch (System.Exception se)
@@ -1199,8 +1210,7 @@ namespace AcadExts
                                      NumDwgs,
                                      " DWG files processed in ",
                                      TimePassed,
-                                     ". Log file: ",
-                                     _Logger.Path));
+                                     ((_Logger.ErrorCount > 0) ? (". Log file: " + _Logger.Path) : (""))));
             }
             catch (System.Exception se)
             {
@@ -1209,7 +1219,7 @@ namespace AcadExts
             }
             finally
             {
-                _Logger.Dispose();
+                AfterProcessing();
             }
         }
     }

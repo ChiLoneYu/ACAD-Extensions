@@ -22,23 +22,32 @@ namespace AcadExts
 
             String newFolder = _Path + "\\ConvertedTo2000\\";
 
-            if (!CheckDirPath()) { return "Invalid path: " + _Path; }
-
-            try { _Logger = new Logger(String.Concat(_Path, "\\ConvertTo2000Errors.txt")); }
-            catch (System.Exception se)
+            try
             {
-                return "Could not create error log file in: " + _Path + " because: " + se.Message;
+                BeforeProcessing();
             }
+            catch(System.Exception se)
+            {
+                //_Logger.Dispose();
+                return "2000 Conversion Exception: " + se.Message;
+            }
+            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
-            StartTimer();
-
-            //try { GetDwgList(SearchOption.TopDirectoryOnly); }
+            //try { _Logger = new Logger(String.Concat(_Path, "\\ConvertTo2000Errors.txt")); }
             //catch (System.Exception se)
             //{
-            //    _Logger.Log("DWG files could not be accessed in: " + _Path + " because: " + se.Message);
-            //    _Logger.Dispose();
-            //    return "DWG files could not be accessed in: " + _Path + " because: " + se.Message;
+            //    return "Could not create error log file in: " + _Path + " because: " + se.Message;
             //}
+
+            //StartTimer();
+
+            try { GetDwgList(SearchOption.TopDirectoryOnly); }
+            catch (System.Exception se)
+            {
+                _Logger.Log("DWG files could not be accessed in: " + _Path + " because: " + se.Message);
+                _Logger.Dispose();
+                return "DWG files could not be accessed in: " + _Path + " because: " + se.Message;
+            }
 
             if (NumDwgs < 1) { return "No DWGs found in: " + _Path; }
 
@@ -96,8 +105,7 @@ namespace AcadExts
             }
             finally
             {
-                _Logger.Dispose();
-                StopTimer();
+                AfterProcessing();
             }
 
             return String.Concat(DwgCounter, " DWGs out of ", NumDwgs, " converted in ", TimePassed);

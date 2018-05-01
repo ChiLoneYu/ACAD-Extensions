@@ -144,6 +144,8 @@
     <Compile Include="Models\DWG Processors\FBDUpdater.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Models\DWG Processors\FP_A_P.cs" />
+    <Compile Include="Models\DWG Processors\LayerCopier.cs" />
     <Compile Include="Models\Helpers\DwgUpdater.cs">
       <SubType>Code</SubType>
     </Compile>

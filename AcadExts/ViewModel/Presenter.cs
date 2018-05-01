@@ -15,6 +15,9 @@ namespace AcadExts
     public class Presenter : ObservableObject
     {
         // Save instances so ICommand property doesn't need to return new DelegateCommands every time property get is called
+
+        //DelegateCommand[] DelegateCommands = new DelegateCommand[] {  };
+
         DelegateCommand _LayerListerCommand = null;
         DelegateCommand _GenerateKeyfileCommand = null;
         DelegateCommand _UpdateFBDCommand = null;
@@ -27,6 +30,7 @@ namespace AcadExts
         DelegateCommand _DebugDetailsCommand = null;
         DelegateCommand _ConverterTo2000Command = null;
         DelegateCommand _DefaultRectangleCheckedCommand = null;
+        DelegateCommand _CopyLayerCommand = null;
 
         private Boolean DebugInfoDisplayed = false;
 
@@ -80,7 +84,9 @@ namespace AcadExts
             return;
         }
 
-        // Command bindings
+        /********************/
+        /* Command bindings */
+        /********************/
 
         public ICommand FormatForDeliveryCommand
         {
@@ -162,9 +168,18 @@ namespace AcadExts
                          (_ConverterTo2000Command = new DelegateCommand(this.ConverterTo2000, (s) => canWork())); }
         }
 
-        // Binded Props for methods
+        public ICommand CopyLayerCommand
+        {
+            get { return _CopyLayerCommand ??
+                         (_CopyLayerCommand = new DelegateCommand(this.CopyLayer, (s) => canWork())); }
+        }
+
+        /****************************/
+        /* Binded Props for methods */
+        /****************************/
 
         // Single folder path used for all dwg processing commands
+
         private String _Path = "Folder Path";
         public String Path
         {
@@ -173,6 +188,7 @@ namespace AcadExts
         }
 
         // 2000 Converter
+
         private Int32 _ValueTo2000;
         public Int32 ValueTo2000
         {
@@ -181,6 +197,7 @@ namespace AcadExts
         }
 
         // FBD Updater
+
         private Int32 _ValueFU;
         public Int32 ValueFU
         {
@@ -202,6 +219,7 @@ namespace AcadExts
         }
 
         // Delivery Formatter
+
         private Int32 _ValueDF;
         public Int32 ValueDF {
             get { return _ValueDF; }
@@ -215,6 +233,7 @@ namespace AcadExts
         }
 
         // Keyfile Generator
+
         private Int32 _ValueKF;
         public Int32 ValueKF
         {
@@ -223,6 +242,7 @@ namespace AcadExts
         }
 
         //XRef Inserter
+
         private Int32 _ValueXI;
         public Int32 ValueXI
         {
@@ -238,6 +258,7 @@ namespace AcadExts
         }
 
         // Layer Checker
+
         private Boolean _MultiLC;
         public Boolean MultiLC
         { 
@@ -260,6 +281,7 @@ namespace AcadExts
         }
 
         // Text Obj Lister
+
         private List<String> _TextList;
         public List<String> TextList
         { 
@@ -268,6 +290,7 @@ namespace AcadExts
         }
 
         // Layer Lister
+
         private Int32 _ValueLL;
         public Int32 ValueLL
         { 
@@ -276,6 +299,7 @@ namespace AcadExts
         }
 
         //Extractor
+
         private Int32 _ValueE;
         public Int32 ValueE
         {
@@ -284,6 +308,7 @@ namespace AcadExts
         }
 
         // Lowercase Layers
+
         private Boolean _MultiLCL;
         public Boolean MultiLCL
         { 
@@ -306,6 +331,7 @@ namespace AcadExts
         }
 
         // List info for all available commands in info tab
+
         private List<String> _CmdInfoList;
         public List<String> CmdInfoList
         { 
@@ -343,7 +369,51 @@ namespace AcadExts
             set { _AboveY = value; RaisePropertyChangedEvent("AboveY"); }
         }
 
-        // Call Back end Methods 
+        // Layer Copier
+
+        private Int32 _ValueLCO;
+        public Int32 ValueLCO
+        {
+            get { return _ValueLCO; }
+            set { _ValueLCO = value; RaisePropertyChangedEvent("ValueLCO"); }
+        }
+
+        private String _PathCopyMap;
+        public String PathCopyMap
+        {
+            get { return _PathCopyMap; }
+            set { _PathCopyMap = value; RaisePropertyChangedEvent("PathCopyMap"); }
+        }
+
+        /*****************************/
+        /* Backend Methods */
+        /*****************************/
+
+        private void CopyLayer()
+        {
+            ValueLCO= 0;
+            worker = GetWorker();
+
+            worker.DoWork += delegate(object sender, DoWorkEventArgs e)
+                {
+                    CallMethodOnMThread(delegate {_CopyLayerCommand.RaiseCanExecuteChanged(); });
+                    DwgProcessor lc = new LayerCopier(Path, sender as BackgroundWorker, PathCopyMap);
+                    e.Result = lc.Process();
+                };
+
+            worker.RunWorkerCompleted += delegate(object sender, RunWorkerCompletedEventArgs e)
+            {
+                CallMethodOnMThread(delegate { _CopyLayerCommand.RaiseCanExecuteChanged(); });
+                Path = e.Result as String;
+            };
+
+            worker.ProgressChanged += delegate(object sender, ProgressChangedEventArgs e)
+            {
+                ValueLCO = e.ProgressPercentage;
+            };
+
+            worker.RunWorkerAsync();
+        }
 
         private void ConverterTo2000()
         {

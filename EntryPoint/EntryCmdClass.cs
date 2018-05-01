@@ -57,7 +57,6 @@ using System.IO;
                              
 // Todo: 
     // Remove unnecessary property changed events for buttons                                                                                   
-    // Make folder browser dialog default to path in bound vm variable
     // Use async. file operations instead of sync.
 
 // Acdbmgd assembly calls into EntryPoint assembly which calls into AcadExts assembly
@@ -106,7 +105,7 @@ namespace EntryPoint
         [CommandMethod("AcadExtsMenu", CommandFlags.Session)]
         public static void AcadExts()
         {
-            if (System.Threading.Thread.CurrentThread.Name == null) { System.Threading.Thread.CurrentThread.Name = "EntryPointToVMThread"; }
+            if (System.Threading.Thread.CurrentThread.Name == null) { System.Threading.Thread.CurrentThread.Name = "MainThreadInEntryPointAssembly"; }
 
             AcadExts.MainWindow mainWin = null;
 
