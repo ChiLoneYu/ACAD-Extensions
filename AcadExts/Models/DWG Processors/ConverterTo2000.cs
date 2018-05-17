@@ -29,7 +29,7 @@ namespace AcadExts
             catch(System.Exception se)
             {
                 //_Logger.Dispose();
-                return "2000 Conversion Exception: " + se.Message;
+                return "2000 Conversion processing exception: " + se.Message;
             }
             //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 

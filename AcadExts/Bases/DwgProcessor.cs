@@ -45,16 +45,13 @@ namespace AcadExts
                 _Path = inPath.TrimEnd(new[] { '\\' });
             }
 
-            _Bw = inBw;
-
-            if (_Bw == null)
+            if (inBw == null)
             {
-                if (_Logger != null)
-                {
-                    try { _Logger.Log("BackgroundWorker is null"); }
-                    catch { }
-                }
                 throw new ArgumentNullException("inBw", "Base dwg processor needs a BackgroundWorker instance");
+            }
+            else 
+            {
+                _Bw = inBw;
             }
         }
 
@@ -92,7 +89,8 @@ namespace AcadExts
 
         public void GetDwgList(SearchOption so)
         {
-            GetDwgList(so, (inFileStr) => { return true; });
+            //GetDwgList(so, (inFileStr) => { return true; });
+            GetDwgList(so, FileStr => true);
             return;
         }
 

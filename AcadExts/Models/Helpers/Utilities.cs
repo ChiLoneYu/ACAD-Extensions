@@ -105,7 +105,7 @@ namespace AcadExts
 
         public static void delLayer(Transaction acTrans, Database db, String layerName)
         {
-            // If the layer  is locked, unlock it
+            // If the layer is locked, unlock it
             using (LayerTable lt = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable)
             {
                 if (lt.Has(layerName))
@@ -189,19 +189,19 @@ namespace AcadExts
         }
 
         // Returns true if file is a valid and accessible file
-        public static Boolean isFilePathOK(this String inFilePath)
-        {
-            FileInfo fi = null;
+        //public static Boolean isFilePathOK(this String inFilePath)
+        //{
+        //    FileInfo fi = null;
 
-            if (String.IsNullOrWhiteSpace(inFilePath)) { return false; }
+        //    if (String.IsNullOrWhiteSpace(inFilePath)) { return false; }
 
-            try { fi = new FileInfo(inFilePath); }
-            catch { return false; }
+        //    try { fi = new FileInfo(inFilePath); }
+        //    catch { return false; }
 
-            if (!File.Exists(inFilePath) || fi == null) { return false; }
+        //    if (!File.Exists(inFilePath) || fi == null) { return false; }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         // Returns true if directory is a valid and accessible directory
         public static Boolean isDirectoryPathOK(this String inDirectoryPath)
@@ -457,5 +457,30 @@ namespace AcadExts
                 return true;
             }
         }
+
+        // Returns true if file is valid, accessible, and has correct file extension
+        public static Boolean isFilePathOK(this String inFilePath, String extension)
+        {
+            return (inFilePath.isFilePathOK() &&
+                    String.Equals(System.IO.Path.GetExtension(inFilePath).ToUpper().Trim(),
+                                  extension.ToUpper().Trim())
+                   );
+        }
+
+        // Returns true if file is valid and accessible
+        public static Boolean isFilePathOK(this String inFilePath)
+        {
+            FileInfo fi = null;
+
+            if (String.IsNullOrWhiteSpace(inFilePath)) { return false; }
+
+            try { fi = new FileInfo(inFilePath); }
+            catch { return false; }
+
+            if (!File.Exists(inFilePath) || fi == null) { return false; }
+
+            return true;
+        }
+
     }
 }

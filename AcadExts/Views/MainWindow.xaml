@@ -7,72 +7,59 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
         mc:Ignorable="d"
-        Title="AutoCAD Extensions" Height="360" Width="800" MinWidth="800" MinHeight="360">
+        FontSize="14"
+        Title="AutoCAD Extensions"
+        Height="500" Width="1200"      
+        ResizeMode="NoResize"
+        Name="AEWindow">
 
     <Window.Resources>
-        <Style x:Key="TabHeaderStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="11"/>
-        </Style>
-        <Style TargetType="CheckBox">
-            <Setter Property="VerticalAlignment" Value="Top"/>
-            <Setter Property="Padding" Value="3,0,0,0"/>
-            <Setter Property="Height" Value="18"/>
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Width" Value="112"/>
-        </Style>
-        <Style TargetType="Grid">
-            <Setter Property="Background" Value="#FFCDD9EE"/>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="Margin" Value="6,0,0,0"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style TargetType="ProgressBar">
-            <Setter Property="Maximum" Value="100"/>
-            <Setter Property="Margin" Value="4,0,4,0"/>
-            <Setter Property="Minimum" Value="0"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="TabItem">
-            <!--<Setter Property="Margin" Value="0"/>-->
-        </Style>
-        <Style BasedOn="{StaticResource {x:Type Button}}"
-               TargetType="Button"
-               x:Key="SelectFolder">
-            <Setter Property="Margin" Value="12,0"/>
-            <Setter Property="Width" Value="Auto"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
         <Style BasedOn="{StaticResource {x:Type Button}}"
                TargetType="Button"
                x:Key="SelectFile">
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,0,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="6"/>
         </Style>
-        <Style BasedOn="{StaticResource {x:Type Button}}"
-               TargetType="Button"
-               x:Key="Command">
-            <Setter Property="Margin" Value="0,0,0,0"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
-
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style TargetType="ProgressBar">
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="Margin" Value="6,6,6,0"/>
+        </Style>
+        <Style TargetType="StackPanel">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="6"/>
+        </Style>
+        <Style TargetType="ListView">
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Margin" Value="6"/>
+        </Style>
     </Window.Resources>
+
     <Window.InputBindings>
         <!--<KeyBinding Gesture="Ctrl+d" Command="{Binding DebugDetails}"/>-->
         <KeyBinding Key="D" Modifiers="Control" Command="{Binding DebugDetails}"/>
@@ -83,30 +70,41 @@
         <local:Presenter/>
     </Window.DataContext>-->
 
-    <Grid Background="#FFDDDDDD">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-        </Grid.ColumnDefinitions>
+    <Grid Name="OuterGrid" Background="#FFB8DCEF" >
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="6*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <TextBox Text="{Binding Path=Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28"></TextBox>
-        <Button Content="Select Folder" Style="{StaticResource SelectFolder}" Grid.Column="1" Height="28">
-            <i:Interaction.Behaviors>
-                <local:FolderDialogBehavior FolderPath="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            </i:Interaction.Behaviors>
-        </Button>
+        <!-- Top Folder Selector-->
+        <Grid Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox FontSize="20" Grid.Column="0" Text="{Binding Path=Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Content="Select Folder" Grid.Column="1">
+                <i:Interaction.Behaviors>
+                    <local:FolderDialogBehavior FolderPath="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </i:Interaction.Behaviors>
+            </Button>
+        </Grid>
 
-        <TabControl Margin="6,0,6,6" Padding="0" Grid.Row="1" Grid.ColumnSpan="2">
+        <!-- Tab control -->
+        <TabControl FontSize="16" Margin="6" Padding="0" Grid.Row="1" Grid.ColumnSpan="2" Background="#FF939393">
 
+            <!-- For calculating window sizing -->
+            <!--<TabItem Header="Dev">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Horizontal">
+                    <TextBox DataContext="{Binding ElementName=AEWindow}" Text="{Binding Width}"/>
+                    <Label Content=" x "/>
+                    <TextBox DataContext="{Binding ElementName=AEWindow}" Text="{Binding Height}"/>
+                </StackPanel>
+            </TabItem>-->
+            
             <!-- 2000 -->
-            <TabItem>
-                <TabItem.Header>
-                    <TextBlock Text="2000" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
+            <TabItem Header="2000">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
@@ -114,19 +112,19 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
 
-                    <Button Grid.Row="1" Grid.Column="1" Command ="{Binding ConverterTo2000Command}" Content="Convert to 2000" Style="{StaticResource Command}"/>
-                    <ProgressBar Value = "{Binding ValueTo2000}"  Grid.Row="1"/>
+                    <ProgressBar Grid.Row="1" Grid.Column="0" Value="{Binding ValueTo2000}"></ProgressBar>
+                    <Button Grid.Column="1" Grid.Row="1" Command ="{Binding ConverterTo2000Command}" Content="Convert to 2000"></Button>
                 </Grid>
             </TabItem>
 
-            <!-- Keyfile -->
+            <!-- Check Layers -->
             <TabItem>
-                <TabItem.Header >
-                    <TextBlock Text="Keyfile Gen." Style="{StaticResource TabHeaderStyle}"/>
+                <TabItem.Header>
+                    <TextBlock Text="Check Layers"/>
                 </TabItem.Header>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -135,19 +133,60 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Button Command= "{Binding GenerateKeyfileCommand}" Content="Generate Keyfiles" Style="{StaticResource Command}" Grid.Row="1" Grid.Column="1"/>
-                    <ProgressBar Value="{Binding Path=ValueKF}" Grid.Row="1" Grid.Column="0"/>
+
+                    <ProgressBar Value="{Binding Path=ValueLC}" Grid.Row="1"/>
+                    <Button Grid.Column="1" Grid.Row="1" Command= "{Binding CheckLayersCommand}" Content="Check Layers"/>
+                    <StackPanel VerticalAlignment="Top" Grid.Row="2" Grid.Column="2" >
+                        <CheckBox Content="Make Changes" IsChecked="{Binding ChangesLC}"/>
+                        <CheckBox Content="Multiple Folders" IsChecked="{Binding MultiLC}"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- Lowercase Layers -->
+            <TabItem Header="Lowercase Layers" >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    
+                    <ProgressBar Value="{Binding Path=ValueLCL}" Grid.Row="1"/>
+                    <Button Command= "{Binding LowercaseLayersCommand}" Content="Lowercase Layers" Grid.Row="1" Grid.Column="1"/>      
+                </Grid>
+            </TabItem>
+            
+            <!-- Keyfile -->
+            <TabItem>
+                <TabItem.Header >
+                    <TextBlock Text="Keyfile Gen."/>
+                </TabItem.Header>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    
+                    <Button Command= "{Binding GenerateKeyfileCommand}" Content="Generate Keyfiles" Grid.Row="1"  Grid.Column="1"/>
+                    <ProgressBar Value="{Binding Path=ValueKF}" Grid.Row="1"/>
                 </Grid>
             </TabItem>
 
             <!-- Layer Lists -->
-            <TabItem>
-                <TabItem.Header>
-                    <TextBlock Text="Layer Lists" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
+            <TabItem Header="Layer Lists">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
@@ -155,20 +194,89 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-                    <Button Command= "{Binding LayerListerCommand}" Content="Make Layer Lists" Style="{StaticResource Command}" Grid.Row="1" Grid.Column="1"/>
+                    
                     <ProgressBar Value="{Binding Path=ValueLL}" Grid.Row="1"/>
+                    <Button Command= "{Binding LayerListerCommand}" Content="Make Layer Lists" Grid.Row="1" Grid.Column="1"/>
                 </Grid>
             </TabItem>
 
             <!-- FBD Updater -->
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Text="Update FBDs"  Style="{StaticResource TabHeaderStyle}"/>
+                    <TextBlock Text="Update FBDs"/>
                 </TabItem.Header>
-                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height=".4*"></RowDefinition>
+                        <RowDefinition Height=".4*"></RowDefinition>
+                        <RowDefinition Height=".4*"></RowDefinition>
+                        <RowDefinition Height=".1*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel VerticalAlignment="Bottom">
+                        <Label Content="XML path"/>
+                        <TextBox Text="{Binding Path=PathFUxml, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Bottom" Grid.Column="1">
+                        <CheckBox IsChecked="{Binding Path=FilesNotSpecified}" Content="Files not specified"></CheckBox>
+                        <!--<Button Style="{StaticResource SelectFile}" Content="Select File" />-->
+                        <local:FileDialog Style="{StaticResource SelectFile}" Content="Select File" FilePath="{Binding PathFUxml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <ProgressBar Grid.Row="1" Value="{Binding Path=ValueFU}"></ProgressBar>                 
+                    <Button Command= "{Binding UpdateFBDCommand}" Content="Update FBDs" Grid.Row="1" Grid.Column="1"/>
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height=".5*"></RowDefinition>
+                            <RowDefinition Height="1*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Label FontSize="18" Margin="0" Grid.ColumnSpan="4" HorizontalAlignment="Center" Content="Figure Text Rectangle Size" ></Label>                
+                        
+                        <StackPanel Grid.Row="1" Grid.Column="0">
+                            <Label Margin="0" HorizontalAlignment="Center" Content="Left of X"/>
+                            <TextBox Margin="0" Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1">
+                            <Label Margin="0" HorizontalAlignment="Center" Content="Below Y"/>
+                            <TextBox Margin="0" Text="{Binding BelowY}" Width="70"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="2">
+                            <Label Margin="0" HorizontalAlignment="Center" Content="Right of X"/>
+                            <TextBox Margin="0" Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"/>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="3">
+                            <Label Margin="0" HorizontalAlignment="Center"  Grid.Column="3" Content="Above Y"/>
+                            <TextBox Margin="0" Text="{Binding AboveY}" Width="70"/>
+                        </StackPanel>
+                    </Grid>
+                    <Button VerticalAlignment="Bottom" Height="60" Content="Use Defaults" Grid.Column="1" Grid.Row="2">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Click">
+                                <i:InvokeCommandAction Command="{Binding DefaultRectangleCheckedCommand}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </Button>            
+                </Grid>
+            </TabItem>
+            
+            <!-- Insert XRefs -->     
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Ins. XRefs"/>
+                </TabItem.Header>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
@@ -177,120 +285,57 @@
                     <Grid.RowDefinitions>
                         <RowDefinition></RowDefinition>
                         <RowDefinition Height=".8*"></RowDefinition>
+                        <RowDefinition Height=".8*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
-
-                    <StackPanel VerticalAlignment="Center">
-                        <Label Content="XML path"/>
-                        <TextBox Text="{Binding Path=PathFUxml, UpdateSourceTrigger=PropertyChanged}"/>
+                    
+                    <StackPanel VerticalAlignment="Bottom" Grid.Row="1">
+                        <Label Grid.Row="1" Content="Excel Path"/>
+                        <TextBox Grid.Row="1" Text= "{Binding Path=PathXIxlsx, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                     
-                    <ProgressBar Grid.Row="1" Value="{Binding Path=ValueFU}"></ProgressBar>
-
-                    <StackPanel VerticalAlignment="Center" Grid.Column="1">
-                        <!--<Button Content="Select File" Style="{StaticResource SelectFile}"/>-->
-                        <local:FileDialog Content="Select File" Style="{StaticResource SelectFile}" FilePath="{Binding PathFUxml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <CheckBox IsChecked="{Binding Path=FilesNotSpecified}" HorizontalAlignment="Center" Content="Files not specified"></CheckBox>
-                    </StackPanel>
-
-                    <Button Command= "{Binding UpdateFBDCommand}" Content="Update FBDs" Style="{StaticResource Command}"  Grid.Row="1" Grid.Column="1"/>
-                    
-                    <StackPanel Grid.Row="2">                  
-                        <Label Content="Figure Text Rectangle Size" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16"></Label>                  
-                        <Grid Margin="4" VerticalAlignment="Bottom" Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition></RowDefinition>
-                            </Grid.RowDefinitions>
-                            
-                            <StackPanel Grid.Column="0">
-                                <Label Margin="0" HorizontalAlignment="Center" Content="Left of X"/>
-                                <TextBox Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1">
-                                <Label HorizontalAlignment="Center" Content="Below Y" Margin="0"/>
-                                <TextBox Text="{Binding BelowY}" Width="70"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <Label HorizontalAlignment="Center" Content="Right of X" Margin="0"/>
-                                <TextBox Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="3">
-                                <Label Margin="0" HorizontalAlignment="Center"  Grid.Column="3" Content="Above Y"/>
-                                <TextBox Text="{Binding AboveY}" Width="70"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <!--<Grid >
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-
-                            <Label Margin="0" Grid.Column="0" Content="Left of X"  HorizontalAlignment="Center" VerticalAlignment="Top" />
-                            <TextBox Text="{Binding LeftOfX, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="0" Width="70"></TextBox>
-
-                            <Label Margin="0" Grid.Column="1" Content="Below Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                            <TextBox Text="{Binding BelowY}" Grid.Row="2" Grid.Column= "1" Width="70"></TextBox>
-
-                            <Label Margin="0" Grid.Column="2" Content="Right of X" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                            <TextBox Text="{Binding RightOfX}" Grid.Row="2" Grid.Column= "2" Width="70"></TextBox>
-
-                            <Label Margin="0" Grid.Column="3" Content="Above Y" HorizontalAlignment="Center" VerticalAlignment="Top" />
-                            <TextBox Text="{Binding AboveY}" Grid.Row="2" Grid.Column="3" Width="70"></TextBox>
-                        </Grid>-->
-                    </StackPanel>
-
-                    <Button  Content="Use Defaults" Grid.Column="1" Grid.Row="3">
-                        <i:Interaction.Triggers>
-                            <i:EventTrigger EventName="Clicked">
-                                <i:InvokeCommandAction Command="{Binding DefaultRectangleCheckedCommand}"/>
-                            </i:EventTrigger>
-                        </i:Interaction.Triggers>
-                    </Button>
-
+                    <!--<Button VerticalAlignment="Bottom" Content="Select File" Grid.Column="1" Grid.Row="1"/>-->
+                    <local:FileDialog VerticalAlignment="Bottom" Style="{StaticResource SelectFile}" Content="Select File" Grid.Row="1" Grid.Column="1" FilePath="{Binding PathXIxlsx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Command= "{Binding InsXRefCommand}" Content="Insert XRefs" Grid.Column="2" Grid.Row="2"/>
+                    <ProgressBar Value= "{Binding Path=ValueXI}" Grid.Row="2"/>
                 </Grid>
             </TabItem>
 
-            <!-- Insert XRefs -->
-            <TabItem >
-                <TabItem.Header>
-                    <TextBlock Text="Ins. XRefs" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
+            <!-- Layer Name -->
+            <TabItem Header="Layer Name">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height=".6*"></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
+                        <RowDefinition/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition />
                     </Grid.RowDefinitions>
-
-                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
-                        <Label Content="Excel Path"/>
-                        <TextBox Text= "{Binding Path=PathXIxlsx, UpdateSourceTrigger=PropertyChanged}"/>
+                    
+                    <StackPanel VerticalAlignment="Bottom" Grid.Row="1">
+                        <Label Content="Layer Suffix"/>
+                        <TextBox Width="120" HorizontalAlignment="Left" Text="{Binding SuffixLN}" />
                     </StackPanel>
                     
-                    <!--<Button VerticalAlignment="Center" Content="Select File" Grid.Column="1" Grid.Row="1" Style="{StaticResource SelectFile}"/>-->
-                    <local:FileDialog VerticalAlignment="Center" Content="Select File" Grid.Row="1" Grid.Column="1"  Style="{StaticResource SelectFile}" FilePath="{Binding PathXIxlsx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Command= "{Binding InsXRefCommand}" Content="Insert XRefs" Style="{StaticResource Command}" Grid.Column="2" Grid.Row="4"/>
-                    <ProgressBar Value= "{Binding Path=ValueXI}" Grid.Row="4"/>
+                    <StackPanel VerticalAlignment="Bottom" Grid.Row="2">
+                        <Label VerticalAlignment="Center" Content="Excel File Path"/>
+                        <TextBox Text="{Binding PathLN}"/>
+                    </StackPanel>
+                    <!--<Button VerticalAlignment="Bottom" Grid.Row="2" Grid.Column="1" Content="Select File"/>-->
+                    <local:FileDialog Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" Style="{StaticResource SelectFile}" Content="Select File" FilePath="{Binding PathLN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Command="{Binding NameLayerCommand}" Grid.Row = "3" Grid.Column="1" Content="Run"/>
+                    <ProgressBar Value="{Binding ValueLN}" Grid.Row="3"/>
                 </Grid>
             </TabItem>
 
             <!-- RPSTL Delivery -->
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Text="RPSTL Deliv." Style="{StaticResource TabHeaderStyle}"/>
+                    <TextBlock Text="RPSTL Deliv."/>
                 </TabItem.Header>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -298,148 +343,79 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height=".6*"></RowDefinition>
                         <RowDefinition></RowDefinition>
+                        <RowDefinition Height=".8*"></RowDefinition>
+                        <RowDefinition Height=".8*"></RowDefinition>
                         <RowDefinition></RowDefinition>
                     </Grid.RowDefinitions>
                     
-                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
+                    <StackPanel VerticalAlignment="Bottom" Grid.Row="1">
                         <Label Content="Suffix"/>
-                        <TextBox Text="{Binding Path=SuffixDF, UpdateSourceTrigger=PropertyChanged}" Width="150" HorizontalAlignment="Left"/>
+                        <TextBox Text="{Binding Path=SuffixDF, UpdateSourceTrigger=PropertyChanged}" Width="120" HorizontalAlignment="Left"/>
                     </StackPanel>
-                    
-                   
-                    <Button Command= "{Binding FormatForDeliveryCommand}" Content="Format for Delivery" Style="{StaticResource Command}" Grid.Row="4" Grid.Column="1"/>
-                    <ProgressBar Value="{Binding Path=ValueDF}" Grid.Row="4"/>
+                    <Button Command= "{Binding FormatForDeliveryCommand}" Content="Format for Delivery" Grid.Row="2" Grid.Column="1"/>
+                    <ProgressBar Value="{Binding Path=ValueDF}" Grid.Row="2"/>
                 </Grid>
             </TabItem>
-
-            <!-- Check Layers -->
-            <TabItem>
-                <TabItem.Header>
-                    <TextBlock Text="Check Layers" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="3.5*"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                    </Grid.RowDefinitions>
-                    
-                    <ProgressBar Value="{Binding Path=ValueLC}" Grid.Row="1"/>
-                    
-                    <StackPanel VerticalAlignment="Center" Grid.Row="1" Grid.Column="1">
-                        <Button Command= "{Binding CheckLayersCommand}" Content="Check Layers" Style="{StaticResource Command}"/>
-                        <CheckBox HorizontalAlignment="Center" Content="Make Changes" IsChecked="{Binding ChangesLC}"/>
-                        <CheckBox HorizontalAlignment="Center" Content="Multiple Directories" IsChecked="{Binding MultiLC}"/>
-                    </StackPanel>
-                    
-                </Grid>
-            </TabItem>
-
-            <!-- Lowercase Layers -->
-            <TabItem >
-                <TabItem.Header>
-                    <TextBlock Text="Lowercase Layers" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                    </Grid.RowDefinitions>
-                    <Button Command= "{Binding LowercaseLayersCommand}" Content="Lowercase Layers"  Style="{StaticResource Command}" Grid.Row="1" Grid.Column="1"/>
-                    <ProgressBar Value="{Binding Path=ValueLCL}" Grid.Row="1"/>
-                </Grid>
-            </TabItem>
-
-            <!-- Extract files -->
-            <!--<TabItem>
-                <TabItem.Header>
-                    <TextBlock Text="Extract" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                    </Grid.RowDefinitions>
-                    <Button Command= "{Binding ExtractCommand}" Content="Extract Files" Style="{StaticResource Command}" Grid.Row="1" Grid.Column="1"/>
-                    <ProgressBar Value="{Binding Path=ValueE}" Grid.Row="1"/>
-                </Grid>
-            </TabItem>-->
-
-            <!-- List Text -->
-            <!--<TabItem>
-                <TabItem.Header>
-                    <TextBlock Text="List Text Objs" Style="{StaticResource TabHeaderStyle}"/>
-                </TabItem.Header>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition Height="7*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Button Command= "{Binding ListObjectsCommand}" Content="List all text in current DWG" HorizontalAlignment="Left" Style="{StaticResource Command}" Height="24"  Width="165" Margin="4,0,0,0" />
-                    --><!--<TextBox Text="{Binding Path=ObjList}" Grid.Row="1" IsReadOnly="True" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" Height="Auto" Margin="4,0,4,4" AllowDrop="False" VerticalContentAlignment="Top"/>--><!--
-                    <ListView Grid.Row="1" Margin="3,0,3,3" Padding="2" ItemsSource="{Binding TextList}" FontSize="14"/>
-                    <Label Content="Text : Layer : Position : Block" Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Grid>
-            </TabItem>-->
-
+            
             <!-- Layer Copier-->
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Text="Layer Copy" Style="{StaticResource TabHeaderStyle}"/>
+                    <TextBlock Text="Layer Copy"/>
                 </TabItem.Header>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition/>
-                        <RowDefinition/>
-                        <RowDefinition/>
+                        <RowDefinition Height=".8*"/>
+                        <RowDefinition Height=".8*"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4*"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" Grid.Row="1">
+                    
+                    <StackPanel VerticalAlignment="Bottom" Grid.Row="1">
                         <Label Content="Text file path for new layer mappings"/>
                         <TextBox Text="{Binding PathCopyMap, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
-                    <local:FileDialog Grid.Column ="1"  Grid.Row="1" Content="Select File" Style="{StaticResource SelectFile}" FilePath="{Binding PathCopyMap, Mode=TwoWay}"/>
+                    <!--<Button VerticalAlignment="Bottom" Content="Select File" Grid.Column="1" Grid.Row="1" Style="{StaticResource SelectFile}"/>-->
+                    <local:FileDialog VerticalAlignment="Bottom" Style="{StaticResource SelectFile}" Grid.Column ="1"  Grid.Row="1" Content="Select File" FilePath="{Binding PathCopyMap, Mode=TwoWay}"/> 
                     <ProgressBar Grid.Row="2" Value="{Binding Path=ValueLCO}"/>
                     <Button Command="{Binding CopyLayerCommand}" Grid.Row="2" Grid.Column="1" Content="Run"/>
                 </Grid>
             </TabItem>
 
-            <!-- Info -->
+            <!-- List Text -->
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Text="Info" Style="{StaticResource TabHeaderStyle}"/>
+                    <TextBlock Text="List Text"/>
                 </TabItem.Header>
                 <Grid>
-                    <ListView ItemsSource= "{Binding CmdInfoList}" Margin="3" Padding="2"/>
-                    <!--<ScrollViewer HorizontalScrollBarVisibility="Visible">
-                        <TextBlock Text="{Binding Path=CmdInfo, UpdateSourceTrigger=PropertyChanged}" Margin="6,6,6,6" FontFamily="Courier"/>
-                    </ScrollViewer>-->
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition Height="6*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <Button Padding="8,0,8,0" Command= "{Binding ListObjectsCommand}" Content="Show all text in current DWG"/>
+                        <Label VerticalAlignment="Center" Content="Block : Layer : Position : Text" />
+                    </StackPanel> 
+                    <ListView Grid.Row="1" ItemsSource="{Binding TextList}" FontSize="12"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Info -->      
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Info"/>
+                </TabItem.Header>
+                <Grid>
+                    <ListView ItemsSource= "{Binding CmdInfoList}" FontSize="14"/>
                 </Grid>
             </TabItem>
             
         </TabControl>
+        
     </Grid>
 </Window>

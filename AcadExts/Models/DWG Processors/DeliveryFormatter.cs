@@ -18,9 +18,10 @@ namespace AcadExts
     {
         private String Suffix { get; set; }
 
-        public DeliveryFormatter(String inPath, BackgroundWorker inBw, String inSuffix) : base(inPath, inBw)
+        public DeliveryFormatter(String inPath, BackgroundWorker inBw, String inSuffix)
+            : base(inPath, inBw)
         {
-            Suffix = inSuffix;
+            this.Suffix = inSuffix.Trim();
         }
         
         public override String Process()
@@ -34,15 +35,13 @@ namespace AcadExts
             }
             catch(System.Exception se)
             {
-                return "RPSTL Gov. Delivery Exception: " + se.Message;
+                return "RPSTL Delivery processing exception: " + se.Message;
             }
-            //StartTimer();
 
-            //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
-
-            //// Open error logger
-            //try { _Logger = new Logger(_Path + "\\RpstlDeliveryErrors.txt"); }
-            //catch { return "Could not write log file in: " + _Path; }
+            if (String.IsNullOrWhiteSpace(Suffix))
+            {
+                return "Invalid Suffix";
+            }
 
             // Get all DWG files
             try { GetDwgList(SearchOption.TopDirectoryOnly); }

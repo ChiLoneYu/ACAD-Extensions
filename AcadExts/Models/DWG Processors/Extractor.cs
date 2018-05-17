@@ -24,7 +24,7 @@ namespace AcadExts
             }
             catch(System.Exception se)
             {
-                return "Extraction Exception: " + se.Message;       
+                return "Extraction processing exception: " + se.Message;       
             }
 
             try { GetDwgList(SearchOption.AllDirectories); }

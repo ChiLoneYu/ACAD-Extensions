@@ -31,6 +31,7 @@ namespace AcadExts
         DelegateCommand _ConverterTo2000Command = null;
         DelegateCommand _DefaultRectangleCheckedCommand = null;
         DelegateCommand _CopyLayerCommand = null;
+        DelegateCommand _NameLayerCommand = null;
 
         private Boolean DebugInfoDisplayed = false;
 
@@ -87,6 +88,15 @@ namespace AcadExts
         /********************/
         /* Command bindings */
         /********************/
+
+        public ICommand NameLayerCommand
+        {
+            get
+            {
+                return _NameLayerCommand ??
+                       (_NameLayerCommand = new DelegateCommand(this.NameLayer, (s) => canWork()));
+            }
+        }
 
         public ICommand FormatForDeliveryCommand
         {
@@ -187,6 +197,28 @@ namespace AcadExts
             set { _Path = value; RaisePropertyChangedEvent("Path"); }
         }
 
+        // Layer Namer
+        private String _SuffixLN = String.Empty;
+        public String SuffixLN
+        {
+            get { return _SuffixLN; }
+            set { _SuffixLN = value; RaisePropertyChangedEvent("SuffixLN"); }
+        }
+
+        private String _PathLN;
+        public String PathLN
+        {
+            get { return _PathLN; }
+            set { _PathLN = value; RaisePropertyChangedEvent("PathLN"); }
+        }
+
+        private Int32 _ValueLN;
+        public Int32 ValueLN
+        {
+            get { return _ValueLN; }
+            set { _ValueLN = value; RaisePropertyChangedEvent("ValueLN"); }
+        }
+
         // 2000 Converter
 
         private Int32 _ValueTo2000;
@@ -226,7 +258,7 @@ namespace AcadExts
             set { _ValueDF = value; RaisePropertyChangedEvent("ValueDF"); }
         }
 
-        private String _SuffixDF;
+        private String _SuffixDF = String.Empty;
         public String SuffixDF {
             get { return _SuffixDF; }
             set { _SuffixDF = value; RaisePropertyChangedEvent("SuffixDF"); }
@@ -385,13 +417,40 @@ namespace AcadExts
             set { _PathCopyMap = value; RaisePropertyChangedEvent("PathCopyMap"); }
         }
 
-        /*****************************/
+        /*******************/
         /* Backend Methods */
-        /*****************************/
+        /*******************/
+
+        private void NameLayer()
+        {
+            ValueLN = 0;
+
+            worker = GetWorker();
+
+            worker.DoWork += delegate(object sender, DoWorkEventArgs e)
+            {
+                CallMethodOnMThread(delegate { _NameLayerCommand.RaiseCanExecuteChanged(); });
+                DwgProcessor ln = new LayerNamer(Path, sender as BackgroundWorker, SuffixLN, PathLN);
+                e.Result = ln.Process();
+            };
+
+            worker.RunWorkerCompleted += delegate(object sender, RunWorkerCompletedEventArgs e)
+            {
+                CallMethodOnMThread(delegate { _NameLayerCommand.RaiseCanExecuteChanged(); });
+                Path = e.Result as String;
+            };
+
+            worker.ProgressChanged += delegate(object sender, ProgressChangedEventArgs e)
+            {
+                ValueLN= e.ProgressPercentage;
+            };
+
+            worker.RunWorkerAsync();
+        }
 
         private void CopyLayer()
         {
-            ValueLCO= 0;
+            ValueLCO = 0;
             worker = GetWorker();
 
             worker.DoWork += delegate(object sender, DoWorkEventArgs e)

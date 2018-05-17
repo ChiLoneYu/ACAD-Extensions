@@ -37,7 +37,7 @@ namespace AcadExts
             }
             catch(System.Exception se)
             {
-                return "FBD Updater Exception: " + se.Message;
+                return "FBD Updater processing exception: " + se.Message;
             }
 
             if (!xmlPath.isFilePathOK()) { return "Invalid XML file path: " + xmlPath; }

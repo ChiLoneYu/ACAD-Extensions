@@ -54,7 +54,7 @@ namespace AcadExts
         {
             WinForms.FolderBrowserDialog fbd = new WinForms.FolderBrowserDialog();
             
-            fbd.Description = "Select a Folder";
+            fbd.Description = "Select a folder for DWG processing";
 
             String currentPath = GetValue(FolderPathProperty) as String;
 

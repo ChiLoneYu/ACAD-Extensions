@@ -38,8 +38,7 @@ namespace AcadExts
             }
             catch(System.Exception se)
             {
-                _Logger.Dispose();
-                return "Keyfile Generation Exception" + se.Message;
+                return "Keyfile Generation processing exception: " + se.Message;
             }
             //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 

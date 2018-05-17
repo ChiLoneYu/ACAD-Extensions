@@ -10,7 +10,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace AcadExts
 {
-    [rtn(".NET rewrite of FP_A_P AutoCAD command")]
+    //[rtn(".NET rewrite of FP_A_P AutoCAD command")]
     internal sealed class FP_A_P : DwgProcessor
     {
         public FP_A_P(String inPath, BackgroundWorker inBw)

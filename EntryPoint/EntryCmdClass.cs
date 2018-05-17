@@ -84,7 +84,7 @@ namespace EntryPoint
             message.Append(String.Concat(Environment.NewLine,
                                          "-----------------------------------------",
                                          Environment.NewLine,
-                                         "Run 'AcadExtsMenu' command to open dialog",
+                                         "Run 'AcadExtsMenu' command to open AutoCAD Extensions dialog",
                                          Environment.NewLine,
                                          "-----------------------------------------",
                                          Environment.NewLine));
@@ -119,7 +119,7 @@ namespace EntryPoint
             {
                 // https://www.theswamp.org/index.php?topic=50815.0
                 mainWin = new AcadExts.MainWindow();
-                mainWin.Topmost = true;
+                //mainWin.Topmost = true;
                 mainWin.ShowActivated = true;
                 //mainWin.Closed += (sender, e) => { global::System.Windows.Forms.MessageBox.Show("Exiting"); };
                 //mainWin.Closed += mainWin_Closed;

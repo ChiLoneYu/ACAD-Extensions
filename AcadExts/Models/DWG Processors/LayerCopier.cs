@@ -10,21 +10,22 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace AcadExts
 {
+    // Program 1
     [rtn("Copies old m layer into new m layer with new dash number")]
     internal sealed class LayerCopier : DwgProcessor
     {
-        // Mstches everything after "DESIGNATIONS WITH"
+        // Matches an M number
+        //private readonly Regex MRegex = new Regex(@"^M(\d){5,7}-\S*$");
+        // Matches everything after "DESIGNATIONS WITH"
         //private readonly Regex PrefixValueRegex = new Regex(@"(?<=^DESIGNATIONS WITH\s)\S*$");
         // Matches everything after MSxxxxxx-"
-        // private readonly Regex MSValueRegex = new Regex(@"(?<=^MS(\d){5,7}-)\S*$");
+        //private readonly Regex MSValueRegex = new Regex(@"(?<=^MS(\d){5,7}-)\S*$");
         // Matches a prefix note
-        private readonly Regex PrefixRegex = new Regex(@"^DESIGNATIONS WITH\s\S*$");
+        private readonly Regex PrefixRegex = new Regex(@"^DESIGNATIONS WITH\s.+$");
         // Matches everything after xxxxxx-
-        private readonly Regex MValueRegex = new Regex(@"(?<=^(\d){5,7}-)\S*$");
+        private readonly Regex DashValueRegex = new Regex(@"(?<=^m(\d){6}[A-Za-z]{0,1}-)\d{1,2}[A-Za-z]?$");
         // Matches a MS#
-        private readonly Regex MSRegex = new Regex(@"^MS(\d){5,7}-(\S)*$");
-
-        //private readonly Regex MRegex = new Regex(@"^M(\d){5,7}-\S*$");
+        private readonly Regex MSRegex = new Regex(@"^MS(\d){6}[A-Za-z]{0,1}-.*$");
 
         private class Row
         {
@@ -34,9 +35,9 @@ namespace AcadExts
             public String col3 { private set; get; }
 
             // Columns from text file prepended with m
-            public String col1m { private set; get; }
-            public String col2m { private set; get; }
-            public String col3m { private set; get; }
+            //public String col1m { private set; get; }
+            //public String col2m { private set; get; }
+            //public String col3m { private set; get; }
 
             public Row(String inCol1, String inCol2, String inCol3)
             {
@@ -44,9 +45,9 @@ namespace AcadExts
                 col2 = inCol2;
                 col3 = inCol3;
 
-                col1m = String.Concat("m", col1);
-                col2m = String.Concat("m", col2);
-                col3m = String.Concat("m", col3);
+                //col1m = String.Concat("m", col1);
+                //col2m = String.Concat("m", col2);
+                //col3m = String.Concat("m", col3);
             }
 
             public override string ToString()
@@ -77,7 +78,7 @@ namespace AcadExts
             }
             catch (System.Exception se)
             {
-                return "Layer Copy Exception: " + se.Message;
+                return "Layer Copy processing exception: " + se.Message;
             }
 
             // Get Dwgs
@@ -118,7 +119,6 @@ namespace AcadExts
                 foreach (String dwg in DwgList)
                 {
                     String justFileName = String.Empty;
-                    String justFileNameNoM = String.Empty;
                     String oldDashNumber = String.Empty;
                     String newDashNumber = String.Empty;
                     Row correspondingRow = null;
@@ -131,39 +131,37 @@ namespace AcadExts
                     }
 
                     justFileName = System.IO.Path.GetFileNameWithoutExtension(dwg);
-                    justFileNameNoM = justFileName.Replace("m", "");
 
                     // Find corresponding row in mapping list
-                    IEnumerable<Row> correspondingRows = mappings.Where<Row>(r => String.Equals(r.col1, justFileNameNoM));
-                    
-                    correspondingRow = correspondingRows.FirstOrDefault<Row>();
+                    IEnumerable<Row> correspondingRows = mappings.Where<Row>(r => String.Equals(r.col1, justFileName));    
 
                     if (correspondingRows.Count() < 1)
                     {
-                        _Logger.Log("Skipping file because no mapping was found for: " + justFileNameNoM);
+                        _Logger.Log("Skipping file because no mapping was found for: " + justFileName);
                         continue;
                     }
                     if (correspondingRows.Count() > 1)
                     {
-                        _Logger.Log("More than one mapping entry was found for: " + justFileNameNoM + ", using: " + correspondingRow.ToString());
-                        continue;
+                        correspondingRow = correspondingRows.First<Row>();
+                        _Logger.Log("More than one mapping entry was found for: " + justFileName + ", using: " + correspondingRow.ToString());
                     }
+                    correspondingRow = correspondingRows.First<Row>();
 
                     // Get old and new dash numbers from corresponding row in text file
                     try
                     {
-                        oldDashNumber = MValueRegex.Match(correspondingRow.col2).Value;
-                        newDashNumber = MValueRegex.Match(correspondingRow.col3).Value;
+                        oldDashNumber = DashValueRegex.Match(correspondingRow.col2).Value;
+                        newDashNumber = DashValueRegex.Match(correspondingRow.col3).Value;
                     }
                     catch (System.Exception se)
                     {
-                        _Logger.Log(se.Message + ": Error parsing dash numbers for: " + correspondingRow.col2 + " or " + correspondingRow.col3);
+                        _Logger.Log(se.Message + ": Error parsing dash numbers for: " + correspondingRow.col2 + " and " + correspondingRow.col3);
                         continue;
                     }
 
                     if (String.IsNullOrWhiteSpace(oldDashNumber) || String.IsNullOrWhiteSpace(newDashNumber))
                     {
-                        _Logger.Log("old and new dash numbers not found in: " + correspondingRow.col2 + " or " + correspondingRow.col3);
+                        _Logger.Log("old and new dash numbers not found in: " + correspondingRow.col2 + " and " + correspondingRow.col3);
                         continue;
                     }
 
@@ -184,15 +182,15 @@ namespace AcadExts
                         {
                             using (LayerTable lt = acTrans.GetObject(db.LayerTableId, OpenMode.ForRead) as LayerTable)
                             {
-                                if (lt.Has(correspondingRow.col2m))
+                                if (lt.Has(correspondingRow.col2))
                                 {
-                                    using (LayerTableRecord layerToCopy = acTrans.GetObject(lt[correspondingRow.col2m], OpenMode.ForRead) as LayerTableRecord)
+                                    using (LayerTableRecord layerToCopy = acTrans.GetObject(lt[correspondingRow.col2], OpenMode.ForRead) as LayerTableRecord)
                                     {
                                         // clone layer
                                         LayerTableRecord newLayer = (LayerTableRecord)layerToCopy.Clone();
 
                                         // rename the new layer using third column in corresponding row
-                                        newLayer.Name = correspondingRow.col3m;
+                                        newLayer.Name = correspondingRow.col3;
 
                                         // upgrade layertable for write and add the new layer to the layertable and db
                                         lt.UpgradeOpen();
@@ -209,7 +207,7 @@ namespace AcadExts
                                             using (Entity ent = acTrans.GetObject(entOid, OpenMode.ForRead) as Entity)
                                             {
                                                 // Check if entity is on col2 layer
-                                                if (String.Equals(ent.Layer, correspondingRow.col2m))
+                                                if (String.Equals(ent.Layer, correspondingRow.col2))
                                                 {
                                                     // Clone entity
                                                     Entity entityClone = ent.Clone() as Entity;
@@ -224,19 +222,20 @@ namespace AcadExts
                                                         // Check if text is a prefix note
                                                         if (PrefixRegex.IsMatch(dbt.TextString))
                                                         {
+                                                            // use new dash number for prefix note on new layer
                                                             dbt.TextString = String.Concat(dbt.TextString.Substring(0, dbt.TextString.IndexOf("WITH") + 4), " " + newDashNumber);
                                                         }
 
                                                         // Check if text is MS#
                                                         if (MSRegex.IsMatch(dbt.TextString))
                                                         {
+                                                            // use new dash number for MS# on new layer
                                                             dbt.TextString = String.Concat(dbt.TextString.Substring(0, dbt.TextString.IndexOf('-') + 1), newDashNumber);
                                                         }
 
                                                         btr.AppendEntity(dbt as Entity);
                                                         acTrans.AddNewlyCreatedDBObject(dbt as Entity, true);
                                                         dbt.Layer = newLayer.Name;
-                                                        continue;
                                                     }
                                                     else
                                                     {
@@ -252,13 +251,19 @@ namespace AcadExts
                                 }
                                 else
                                 {
-                                    _Logger.Log(correspondingRow.col2m + " layer not found in dwg: " + dwg);
+                                    _Logger.Log(correspondingRow.col2 + " layer not found in dwg: " + dwg);
                                 }
                             }
                             acTrans.Commit();
                         }
-                        try { db.SaveAs(db.Filename, DwgVersion.Current); }
-                        catch (System.Exception se) { _Logger.Log("Could not save processed " + db.Filename + " because: " + se.Message); }
+                        
+                        try 
+                        { db.SaveAs(String.Concat(Path.GetDirectoryName(db.Filename),
+                                                  "\\",
+                                                  correspondingRow.col3,
+                                                  ".dwg"), DwgVersion.Current);
+                        }
+                        catch (System.Exception se) { _Logger.Log("Could not save processed dwg because: " + se.Message); }
                     }
 
                     // Increment dwg counter
@@ -280,7 +285,12 @@ namespace AcadExts
                 AfterProcessing();
             }
 
-            return DwgCounter.ToString() + " dwgs out of " + NumDwgs.ToString() + " processed in: " + TimePassed;
+            return String.Concat(DwgCounter,
+                     " out of ",
+                     NumDwgs,
+                     " dwgs processed in ",
+                     TimePassed,
+                     ((_Logger.ErrorCount > 0) ? (". Log file: " + _Logger.Path) : "."));
         }
     }
 }

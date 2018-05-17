@@ -37,15 +37,6 @@ namespace AcadExts
 
             //if (!CheckDirPath()) { return "Invalid path: " + _Path; }
 
-            try
-            {
-                textReport = new FileInfo(_Path + "\\dwgsource_check_" + DateTime.Now.ToString("ddHHmmss") + ".txt");
-                writer = new StreamWriter(textReport.FullName);
-            }
-            catch
-            {
-                return "Could not open checker log file in: " + _Path;
-            }
 
             try
             {
@@ -53,7 +44,18 @@ namespace AcadExts
             }
             catch(System.Exception se)
             {
-                return "Layer Checker Exception: " + se.Message;
+                return "Layer Checker processing exception: " + se.Message;
+            }
+
+            try
+            {
+                textReport = new FileInfo(_Path + "\\dwgsource_check_" + DateTime.Now.ToString("ddHHmmss") + ".txt");
+                writer = new StreamWriter(textReport.FullName);
+            }
+            catch
+            {
+                _Logger.Dispose();
+                return "Could not open checker log file in: " + _Path;
             }
             //try { _Logger = new Logger(_Path + "\\LayerCheckerErrorLog.txt"); }
             //catch { return "Could not create error log file in: " + _Path; }

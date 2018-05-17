@@ -10,7 +10,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 
 namespace AcadExts
 {
-    //[rtn("Lists info about all text objects in all blocks in the currently opened DWG")]
+    [rtn("Lists info about all text objects in all blocks in the currently opened DWG")]
     internal sealed class ObjectLister
     {
         //private readonly String path = String.Empty;
@@ -55,13 +55,13 @@ namespace AcadExts
                                     {
                                         StringBuilder currentString = new StringBuilder();
                                         // Print the block, layer, text value, and truncated x,y values
-                                        currentString.Append(dbt.TextString)
+                                        currentString.Append(dbt.BlockName)
                                                       .Append("   :   ")
                                                       .Append(dbt.Layer)
                                                       .Append("   :   ")
                                                       .Append(String.Concat("(", dbt.Position.X.truncstring(2),", ", dbt.Position.Y.truncstring(2),")"))
                                                       .Append("   :   ")
-                                                      .Append(dbt.BlockName);
+                                                      .Append(dbt.TextString);
 
                                         TextList.Add(currentString.ToString());
                                     }
