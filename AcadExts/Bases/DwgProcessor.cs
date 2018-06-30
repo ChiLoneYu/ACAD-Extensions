@@ -30,11 +30,14 @@ namespace AcadExts
 
         //private List<String> _DwgList;
         //protected List<String> DwgList { get { return _DwgList; } }
+        // List of dwgs to be processed
         protected List<String> DwgList { get; private set; }
 
+        // dwg count. increment this as each dwg is processed
         private Int32 _DwgCounter = 0;
         protected Int32 DwgCounter { get { return _DwgCounter; } set { _DwgCounter = value; } }
 
+        //  Processing timer
         protected String TimePassed { get { return timer.Elapsed.TotalSeconds.PrintTimeFromSeconds() ?? " null "; } }
 
         // Ctor
@@ -42,6 +45,7 @@ namespace AcadExts
         {
             if (!String.IsNullOrWhiteSpace(inPath)) 
             {
+                // Cut trailing slashes
                 _Path = inPath.TrimEnd(new[] { '\\' });
             }
 
@@ -57,7 +61,7 @@ namespace AcadExts
 
         protected virtual void BeforeProcessing()
         {
-            // Check PDF path
+            // Check folder path
             if (!_Path.isDirectoryPathOK())
             {
                 throw new System.IO. DirectoryNotFoundException(String.Concat("Folder not found: ", _Path));
@@ -68,6 +72,7 @@ namespace AcadExts
             catch
             {
                 try { _Logger.Dispose(); } catch { }
+                // Re-throw exception
                 throw;
             }
 
@@ -87,23 +92,38 @@ namespace AcadExts
             try { _Logger.Dispose(); } catch { }
         }
 
-        public void GetDwgList(SearchOption so)
+        // Pass null for no filter
+        // File type defaults to .*
+        public void GetFiles(SearchOption so, Predicate<String> filter, String extension = "*.*")
         {
-            //GetDwgList(so, (inFileStr) => { return true; });
-            GetDwgList(so, FileStr => true);
-            return;
+            DwgList = System.IO.Directory.EnumerateFiles(_Path, extension, so)
+                                         .ToList<String>()
+                                         .FindAll(filter ?? (s => true));
         }
 
-        public void GetDwgList(SearchOption so, Predicate<String> filter)
-        {
-            DwgList = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", so).ToList<String>().FindAll(filter);
-            return;
-        }
+        //public void GetFileList(SearchOption so) 
+        //{
+        //    DwgList = Directory.EnumerateFiles(_Path, "*.*", so).ToList<String>();
+        //    return;
+        //}
 
-        public Boolean CheckDirPath()
-        {
-            return _Path.isDirectoryPathOK();
-        }
+        //public void GetDwgList(SearchOption so)
+        //{
+        //    //GetDwgList(so, (inFileStr) => { return true; });
+        //    GetDwgList(so, FileStr => true);
+        //    return;
+        //}
+
+        //public void GetDwgList(SearchOption so, Predicate<String> filter)
+        //{
+        //    DwgList = System.IO.Directory.EnumerateFiles(_Path, "*.dwg", so).ToList<String>().FindAll(filter);
+        //    return;
+        //}
+
+        //public Boolean CheckDirPath()
+        //{
+        //    return _Path.isDirectoryPathOK();
+        //}
 
         protected void StartTimer()
         {
@@ -124,7 +144,7 @@ namespace AcadExts
         public abstract String Process();
 
         #region Template Pattern
-        // In each dervied processing class, override start, finish, and perform processing methods
+        // In each dervied processing class, override initialize, performProcessing, and cleanup methods
         // and call below Process method (the template method) from view model. This will ensure the same template is being
         // used for all dwg processing functions.
 
